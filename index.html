@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Anniversary & Birthday Countdown 🌿</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@400;600&display=swap');
+
+  :root {
+    --cream: #F5EFE4;
+    --warm-white: #FBF7F0;
+    --parchment: #EDE3D0;
+    --terracotta: #C4704A;
+    --rust: #A85432;
+    --sage: #7A8C6E;
+    --moss: #4E5E42;
+    --brown: #5C3D2E;
+    --gold: #B8860B;
+    --text-dark: #2E1F0F;
+    --text-mid: #6B4C30;
+    --text-light: #9B7A5A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--cream);
+    color: var(--text-dark);
+    font-family: 'Lora', serif;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screen { display: none; min-height: 100vh; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ─── LOADING ─── */
+  #loading {
+    align-items: center; justify-content: center; background: var(--cream);
+  }
+  .loader-leaf { font-size: 40px; animation: spin 1.4s ease-in-out infinite; }
+  @keyframes spin { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+
+  /* ─── COVER ─── */
+  #cover {
+    align-items: center; justify-content: center; text-align: center;
+    padding: 40px 24px;
+    background: linear-gradient(160deg, #EDE3D0 0%, #F5EFE4 50%, #E8D9C0 100%);
+  }
+  .cover-botanical { font-size: 64px; margin-bottom: 8px; animation: gentleSway 4s ease-in-out infinite; }
+  @keyframes gentleSway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  .cover-label { font-family: 'Caveat', cursive; font-size: 18px; color: var(--text-light); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  .cover-title { font-family: 'Playfair Display', serif; font-size: clamp(32px, 8vw, 52px); font-weight: 600; color: var(--brown); line-height: 1.1; margin-bottom: 6px; }
+  .cover-title em { font-style: italic; color: var(--terracotta); }
+  .cover-subtitle { font-family: 'Lora', serif; font-style: italic; font-size: 16px; color: var(--text-mid); margin-bottom: 40px; line-height: 1.6; }
+  .cover-dates { display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 48px; }
+  .cover-date-pill { background: var(--parchment); border: 1px solid rgba(92,61,46,0.2); border-radius: 40px; padding: 8px 18px; font-family: 'Caveat', cursive; font-size: 17px; color: var(--text-mid); }
+  .cover-date-divider { color: var(--terracotta); font-size: 20px; }
+  .btn-open { background: var(--brown); color: var(--cream); border: none; border-radius: 50px; padding: 16px 40px; font-family: 'Lora', serif; font-size: 17px; cursor: pointer; letter-spacing: 0.04em; transition: all 0.3s; box-shadow: 0 4px 20px rgba(92,61,46,0.25); }
+  .btn-open:active { background: var(--rust); transform: translateY(1px); }
+  .cover-footer { position: absolute; bottom: 18px; font-family: 'Caveat', cursive; font-size: 14px; color: var(--text-light); text-align: center; width: 100%; opacity: 0.7; }
+
+  /* ─── CALENDAR ─── */
+  #calendar { flex-direction: column; background: var(--warm-white); }
+  .cal-header {
+    background: linear-gradient(135deg, var(--brown) 0%, #3D2415 100%);
+    color: var(--cream); padding: 26px 20px 22px; text-align: center;
+    position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 20px rgba(0,0,0,0.2);
+  }
+  .cal-header-emoji { font-size: 26px; margin-bottom: 4px; }
+  .cal-header h2 { font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 600; }
+  .cal-header p { font-family: 'Caveat', cursive; font-size: 14px; color: rgba(245,239,228,0.7); margin-top: 2px; }
+  .cal-progress { margin: 12px 20px 0; height: 4px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; }
+  .cal-progress-fill { height: 100%; background: var(--terracotta); border-radius: 4px; transition: width 0.6s ease; }
+  .cal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; padding: 18px 16px 110px; }
+
+  .day-card {
+    aspect-ratio: 1; border-radius: 16px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; cursor: pointer; position: relative;
+    overflow: hidden; transition: transform 0.15s; user-select: none;
+  }
+  .day-card:active { transform: scale(0.95); }
+
+  .day-card.locked { background: var(--parchment); border: 1.5px solid rgba(92,61,46,0.12); }
+  .day-card.locked .day-num { color: var(--text-light); }
+  .day-card.locked .lock-icon { font-size: 16px; margin-bottom: 4px; opacity: 0.4; }
+
+  .day-card.available { background: linear-gradient(135deg, #EDE3D0 0%, #E0CDB0 100%); border: 1.5px solid rgba(196,112,74,0.3); box-shadow: 0 3px 12px rgba(196,112,74,0.15); }
+  .day-card.available .day-num { color: var(--terracotta); }
+
+  .day-card.today { background: linear-gradient(135deg, var(--terracotta) 0%, var(--rust) 100%); border: none; box-shadow: 0 6px 20px rgba(196,112,74,0.4); }
+  .day-card.today .day-num, .day-card.today .day-label, .day-card.today .lock-icon { color: white; }
+  .day-card.today::after { content: '✨'; position: absolute; top: 6px; right: 8px; font-size: 11px; }
+
+  .day-card.opened { background: linear-gradient(135deg, var(--sage) 0%, var(--moss) 100%); border: none; box-shadow: 0 3px 10px rgba(78,94,66,0.2); }
+  .day-card.opened .day-num, .day-card.opened .day-label { color: white; }
+  .day-card.opened::after { content: '♥'; position: absolute; top: 6px; right: 8px; font-size: 11px; color: rgba(255,255,255,0.7); }
+
+  .day-card.special { box-shadow: 0 6px 22px rgba(184,134,11,0.35); }
+  .day-card.special::before {
+    content: ''; position: absolute; inset: 0; border-radius: 16px;
+    border: 2px solid rgba(184,134,11,0.5); pointer-events:none;
+  }
+  .day-card .special-icon { font-size: 26px; margin-bottom: 4px; }
+
+  .day-num { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 600; line-height: 1; margin-bottom: 2px; }
+  .day-label { font-family: 'Caveat', cursive; font-size: 17px; color: var(--text-mid); font-weight: 600; }
+  .day-card.available .day-label, .day-card.locked .day-label { color: var(--text-light); }
+
+  /* ─── ENVELOPE OVERLAY ─── */
+  .overlay { position: fixed; inset: 0; background: rgba(46,31,15,0.7); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .overlay.show { display: flex; }
+  .modal-box { background: var(--warm-white); border-radius: 24px; width: 100%; max-width: 420px; max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.35); animation: slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .envelope-top { background: linear-gradient(135deg, var(--terracotta) 0%, var(--rust) 100%); padding: 22px 24px 18px; text-align: center; position: relative; }
+  .envelope-top.gold { background: linear-gradient(135deg, #D4A53C 0%, var(--gold) 100%); }
+  .envelope-top::after { content: ''; position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 24px solid transparent; border-right: 24px solid transparent; border-top: 16px solid var(--rust); }
+  .envelope-top.gold::after { border-top-color: var(--gold); }
+  .envelope-emoji { font-size: 38px; margin-bottom: 4px; }
+  .envelope-date-label { font-family: 'Caveat', cursive; font-size: 19px; color: rgba(255,255,255,0.92); }
+
+  .envelope-body { padding: 34px 22px 22px; }
+
+  .photo-display { width: 100%; border-radius: 12px; margin-bottom: 18px; overflow: hidden; min-height: 80px; }
+  .photo-display img { width: 100%; display: block; border-radius: 12px; max-height: 320px; object-fit: cover; }
+
+  .msg-type-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--parchment); border-radius: 20px; padding: 4px 12px; font-family: 'Caveat', cursive; font-size: 14px; color: var(--text-mid); margin-bottom: 14px; }
+
+  .envelope-message { font-family: 'Lora', serif; font-style: italic; font-size: 17px; line-height: 1.7; color: var(--text-dark); margin-bottom: 18px; white-space: pre-wrap; }
+  .envelope-message.empty { color: var(--text-light); font-style: italic; }
+
+  .envelope-signature { font-family: 'Caveat', cursive; font-size: 19px; color: var(--terracotta); text-align: right; margin-bottom: 22px; }
+
+  .btn-close { width: 100%; background: var(--brown); color: var(--cream); border: none; border-radius: 50px; padding: 14px; font-family: 'Lora', serif; font-size: 16px; cursor: pointer; }
+  .btn-close:active { background: var(--rust); }
+
+  /* ─── BACK / EDIT BUTTONS ─── */
+  .back-btn {
+    position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
+    background: var(--brown); color: var(--cream); border: none; border-radius: 50px;
+    padding: 12px 30px; font-family: 'Caveat', cursive; font-size: 16px; cursor: pointer;
+    z-index: 50; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: none;
+  }
+  .edit-fab {
+    position: fixed; bottom: 26px; right: 18px; width: 42px; height: 42px;
+    border-radius: 50%; background: rgba(92,61,46,0.45); color: rgba(245,239,228,0.85);
+    border: none; font-size: 16px; cursor: pointer; z-index: 50; display: none;
+    align-items: center; justify-content: center; backdrop-filter: blur(2px);
+  }
+
+  /* ─── TOAST ─── */
+  .toast { position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--brown); color: var(--cream); padding: 10px 22px; border-radius: 50px; font-family: 'Caveat', cursive; font-size: 15px; opacity: 0; transition: all 0.3s; z-index: 200; white-space: nowrap; pointer-events: none; max-width: 90vw; text-align:center; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ─── PIN MODAL ─── */
+  .pin-box { padding: 30px 26px; text-align: center; }
+  .pin-box h3 { font-family: 'Playfair Display', serif; font-size: 19px; margin-bottom: 6px; color: var(--brown); }
+  .pin-box p { font-family: 'Lora', serif; font-size: 14px; color: var(--text-mid); margin-bottom: 18px; }
+  .pin-input { width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid var(--parchment); background: var(--cream); font-size: 22px; text-align: center; letter-spacing: 8px; font-family: 'Lora', serif; margin-bottom: 14px; }
+  .pin-input:focus { outline: none; border-color: var(--terracotta); }
+  .pin-actions { display: flex; gap: 10px; }
+  .pin-actions button { flex: 1; padding: 12px; border-radius: 50px; border: none; font-family: 'Lora', serif; font-size: 15px; cursor: pointer; }
+  .pin-cancel { background: var(--parchment); color: var(--text-mid); }
+  .pin-submit { background: var(--brown); color: var(--cream); }
+
+  /* ─── EDITOR ─── */
+  #editor { flex-direction: column; background: var(--warm-white); }
+  .editor-header { background: var(--brown); color: var(--cream); padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+  .editor-header h2 { font-family: 'Playfair Display', serif; font-size: 18px; }
+  .editor-header button { background: rgba(255,255,255,0.15); color: var(--cream); border: none; border-radius: 30px; padding: 8px 16px; font-family: 'Lora', serif; font-size: 13px; cursor: pointer; }
+
+  .editor-day-list { padding: 14px 16px 100px; }
+  .editor-day-item {
+    background: var(--warm-white); border: 1.5px solid var(--parchment); border-radius: 14px;
+    padding: 14px 16px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+  }
+  .editor-day-item .ed-num { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--terracotta); min-width: 30px; }
+  .editor-day-item .ed-info { flex: 1; min-width: 0; }
+  .editor-day-item .ed-date { font-family: 'Caveat', cursive; font-size: 14px; color: var(--text-light); }
+  .editor-day-item .ed-preview { font-size: 13px; color: var(--text-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .editor-day-item .ed-preview.empty { color: var(--text-light); font-style: italic; }
+  .editor-day-item .ed-thumb { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+  .editor-day-item .ed-status { font-size: 13px; flex-shrink: 0; }
+
+  /* ─── DAY EDIT MODAL ─── */
+  #dayEditOverlay .modal-box { max-width: 440px; }
+  .day-edit-body { padding: 22px; }
+  .day-edit-body label { display: block; font-family: 'Caveat', cursive; font-size: 15px; color: var(--text-mid); margin-bottom: 6px; margin-top: 16px; }
+  .day-edit-body label:first-child { margin-top: 0; }
+  .day-edit-body select, .day-edit-body textarea, .day-edit-body input[type=text] {
+    width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--parchment);
+    background: var(--cream); font-family: 'Lora', serif; font-size: 15px; color: var(--text-dark);
+  }
+  .day-edit-body textarea { min-height: 110px; resize: vertical; line-height: 1.5; }
+  .day-edit-body select:focus, .day-edit-body textarea:focus, .day-edit-body input:focus { outline: none; border-color: var(--terracotta); }
+
+  .icon-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .icon-choice { width: 42px; height: 42px; border-radius: 10px; border: 1.5px solid var(--parchment); background: var(--cream); font-size: 19px; cursor: pointer; display:flex; align-items:center; justify-content:center; }
+  .icon-choice.sel { border-color: var(--terracotta); background: var(--parchment); }
+
+  .photo-upload-area { margin-top: 6px; }
+  .photo-preview-wrap { position: relative; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .photo-preview-wrap img { width: 100%; max-height: 200px; object-fit: cover; display: block; }
+  .photo-remove-btn { position: absolute; top: 6px; right: 6px; background: rgba(46,31,15,0.7); color: white; border: none; border-radius: 20px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .upload-btn-label {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1.5px dashed rgba(92,61,46,0.3); border-radius: 10px; padding: 16px;
+    font-family: 'Caveat', cursive; font-size: 15px; color: var(--text-mid); cursor: pointer; background: var(--parchment);
+  }
+  .upload-btn-label input { display: none; }
+
+  .day-edit-actions { display: flex; gap: 10px; margin-top: 22px; }
+  .day-edit-actions button { flex: 1; padding: 13px; border-radius: 50px; border: none; font-family: 'Lora', serif; font-size: 15px; cursor: pointer; }
+  .ed-save { background: var(--brown); color: var(--cream); }
+  .ed-cancel { background: var(--parchment); color: var(--text-mid); }
+
+  .save-indicator { font-family: 'Caveat', cursive; font-size: 13px; color: var(--sage); text-align: center; margin-top: 10px; min-height: 18px; }
+
+  /* ─── ANNIVERSARY OVERLAY ─── */
+  #anniversaryOverlay { align-items: flex-end; padding: 0; }
+  .anniv-sheet {
+    background: linear-gradient(170deg, #FBF7F0 0%, #F0E6D0 100%);
+    border-radius: 28px 28px 0 0;
+    width: 100%; max-width: 480px; max-height: 92vh;
+    overflow-y: auto; padding: 0 0 36px;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.25);
+    animation: sheetUp 0.4s cubic-bezier(0.34,1.4,0.64,1);
+  }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .anniv-header {
+    background: linear-gradient(135deg, #D4A53C 0%, #B8860B 100%);
+    border-radius: 28px 28px 0 0; padding: 24px 24px 20px; text-align: center;
+    position: relative;
+  }
+  .anniv-header h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: white; }
+  .anniv-header p { font-family: 'Caveat', cursive; font-size: 16px; color: rgba(255,255,255,0.85); margin-top: 3px; }
+
+  /* Flower */
+  .flower-wrap { display: flex; justify-content: center; padding: 14px 24px 4px; position: relative; overflow: visible; }
+  .flower-svg { width: 310px; height: 310px; filter: drop-shadow(0 8px 24px rgba(184,100,11,0.22)); overflow: visible; }
+
+  .petal-group {
+    cursor: pointer;
+    transform-origin: 150px 150px;
+    transition: transform 0.55s cubic-bezier(0.22,1,0.36,1), opacity 0.4s, filter 0.3s;
+  }
+  .petal-group .petal-main { opacity: 0.9; transition: opacity 0.3s; }
+  .petal-group:hover .petal-main { opacity: 1; filter: brightness(1.08); }
+
+  @keyframes petalBloom {
+    0% { transform: scale(0.4) rotate(var(--rot)); opacity: 0; }
+    100% { transform: scale(1) rotate(var(--rot)); opacity: 1; }
+  }
+  .petal-group { animation: petalBloom 0.9s cubic-bezier(0.34,1.3,0.64,1) both; }
+  #petal0 { --rot: 0deg;   --spin: -420deg; --tx: 0px;    --ty: -110px; animation-delay: 0.05s; }
+  #petal1 { --rot: 90deg;  --spin: -330deg; --tx: 110px;  --ty: 0px;    animation-delay: 0.15s; }
+  #petal2 { --rot: 180deg; --spin: -390deg; --tx: 0px;    --ty: 110px;  animation-delay: 0.1s; }
+  #petal3 { --rot: 270deg; --spin: -360deg; --tx: -110px; --ty: 0px;    animation-delay: 0.2s; }
+
+  /* Tap — petal falls off elegantly */
+  @keyframes petalFall0 {
+    0%   { transform: rotate(0deg) translate(0px, 0px) scale(1); opacity: 1; filter: drop-shadow(0 4px 12px rgba(255,100,150,0.5)); }
+    15%  { transform: rotate(-8deg) translate(-6px, 18px) scale(1.05); opacity: 1; filter: drop-shadow(0 8px 20px rgba(255,100,150,0.7)); }
+    40%  { transform: rotate(12deg) translate(14px, 80px) scale(0.92); opacity: 0.85; }
+    65%  { transform: rotate(-6deg) translate(-8px, 160px) scale(0.78); opacity: 0.55; }
+    100% { transform: rotate(18deg) translate(20px, 280px) scale(0.4); opacity: 0; }
+  }
+  @keyframes petalFall1 {
+    0%   { transform: rotate(90deg) translate(0px, 0px) scale(1); opacity: 1; filter: drop-shadow(0 4px 12px rgba(255,140,0,0.5)); }
+    15%  { transform: rotate(82deg) translate(-4px, 16px) scale(1.05); opacity: 1; filter: drop-shadow(0 8px 20px rgba(255,140,0,0.7)); }
+    40%  { transform: rotate(104deg) translate(12px, 75px) scale(0.9); opacity: 0.85; }
+    65%  { transform: rotate(78deg) translate(-10px, 155px) scale(0.75); opacity: 0.55; }
+    100% { transform: rotate(110deg) translate(18px, 275px) scale(0.38); opacity: 0; }
+  }
+  @keyframes petalFall2 {
+    0%   { transform: rotate(180deg) translate(0px, 0px) scale(1); opacity: 1; filter: drop-shadow(0 4px 12px rgba(255,50,0,0.5)); }
+    15%  { transform: rotate(172deg) translate(8px, 14px) scale(1.05); opacity: 1; filter: drop-shadow(0 8px 20px rgba(255,50,0,0.7)); }
+    40%  { transform: rotate(193deg) translate(-10px, 72px) scale(0.91); opacity: 0.85; }
+    65%  { transform: rotate(168deg) translate(12px, 152px) scale(0.76); opacity: 0.55; }
+    100% { transform: rotate(198deg) translate(-16px, 272px) scale(0.4); opacity: 0; }
+  }
+  @keyframes petalFall3 {
+    0%   { transform: rotate(270deg) translate(0px, 0px) scale(1); opacity: 1; filter: drop-shadow(0 4px 12px rgba(255,180,0,0.5)); }
+    15%  { transform: rotate(262deg) translate(6px, 16px) scale(1.05); opacity: 1; filter: drop-shadow(0 8px 20px rgba(255,180,0,0.7)); }
+    40%  { transform: rotate(281deg) translate(-12px, 78px) scale(0.9); opacity: 0.85; }
+    65%  { transform: rotate(258deg) translate(9px, 158px) scale(0.77); opacity: 0.55; }
+    100% { transform: rotate(285deg) translate(-20px, 278px) scale(0.38); opacity: 0; }
+  }
+
+  .petal-group.falling-0 { animation: petalFall0 2.2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important; pointer-events: none; }
+  .petal-group.falling-1 { animation: petalFall1 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important; pointer-events: none; }
+  .petal-group.falling-2 { animation: petalFall2 2.1s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important; pointer-events: none; }
+  .petal-group.falling-3 { animation: petalFall3 2.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important; pointer-events: none; }
+
+  /* After fall — stays gone */
+  .petal-group.spun {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    animation: none !important;
+  }
+
+  .petal-label-text {
+    font-family: 'Caveat', cursive; font-size: 13px; fill: #5C3D2E;
+    pointer-events: none; text-anchor: middle; font-weight: 600;
+  }
+
+  @keyframes centreGlow {
+    0%,100% { filter: drop-shadow(0 0 4px rgba(212,165,60,0.5)); }
+    50%      { filter: drop-shadow(0 0 14px rgba(212,165,60,1)); }
+  }
+  .flower-centre { animation: centreGlow 2.5s ease-in-out infinite; }
+  @keyframes centreJoy {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.25); }
+    70%  { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+  .flower-centre.pulse { animation: centreJoy 0.5s ease both, centreGlow 2.5s ease-in-out 0.5s infinite; }
+
+  @keyframes stemGrow {
+    from { stroke-dashoffset: 80; }
+    to   { stroke-dashoffset: 0; }
+  }
+  .stem-line { stroke-dasharray: 80; stroke-dashoffset: 0; animation: stemGrow 0.6s ease both; }
+
+  /* Sparkle burst */
+  .sparkle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: calc(100% + 200px); pointer-events: none; z-index: 10; }
+
+  /* Stem card fly-in */
+  @keyframes cardFlyIn {
+    0%   { transform: translateY(40px) scale(0.94); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .stem-card.fly-in { animation: cardFlyIn 0.45s cubic-bezier(0.34,1.3,0.64,1) both; }
+
+  /* Stems panel */
+  .stems-intro { text-align: center; font-family: 'Caveat', cursive; font-size: 15px; color: var(--text-light); padding: 0 24px 4px; }
+
+  .stem-cards { padding: 12px 18px 0; display: flex; flex-direction: column; gap: 12px; }
+  .stem-card {
+    background: white; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(92,61,46,0.08); border: 1.5px solid var(--parchment);
+    transition: all 0.3s;
+  }
+  .stem-card.locked { opacity: 0.45; }
+  .stem-card-header {
+    display: flex; align-items: center; gap: 10px; padding: 14px 16px;
+    cursor: pointer; user-select: none;
+  }
+  .stem-card.locked .stem-card-header { cursor: default; }
+  .stem-icon { font-size: 22px; flex-shrink: 0; }
+  .stem-title { font-family: 'Caveat', cursive; font-size: 16px; color: var(--text-mid); flex: 1; line-height: 1.3; }
+  .stem-chevron { font-size: 13px; color: var(--text-light); transition: transform 0.25s; }
+  .stem-card.open .stem-chevron { transform: rotate(180deg); }
+
+  .stem-body { display: none; padding: 0 16px 16px; }
+  .stem-card.open .stem-body { display: block; }
+  .stem-message {
+    font-family: 'Lora', serif; font-style: italic; font-size: 16px; line-height: 1.7;
+    color: var(--text-dark); white-space: pre-wrap;
+  }
+  .stem-message.empty { color: var(--text-light); }
+  .stem-divider { height: 1px; background: var(--parchment); margin-bottom: 12px; }
+
+  .anniv-close-btn { display: block; margin: 22px 18px 0; width: calc(100% - 36px); background: var(--brown); color: var(--cream); border: none; border-radius: 50px; padding: 14px; font-family: 'Lora', serif; font-size: 16px; cursor: pointer; }
+
+  /* Anniversary editor */
+  .anniv-edit-stem { margin-bottom: 18px; }
+  .anniv-edit-stem label { display: block; font-family: 'Caveat', cursive; font-size: 14px; color: var(--text-mid); margin-bottom: 6px; }
+  .anniv-edit-stem textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--parchment); background: var(--cream); font-family: 'Lora', serif; font-size: 15px; color: var(--text-dark); min-height: 90px; resize: vertical; line-height: 1.5; }
+  .anniv-edit-stem textarea:focus { outline: none; border-color: var(--terracotta); }
+
+  /* Final note card */
+  @keyframes finalCardAppear {
+    0%   { opacity: 0; transform: translateY(24px) scale(0.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  #annexFinalCard.visible {
+    animation: finalCardAppear 0.7s cubic-bezier(0.34,1.3,0.64,1) both;
+  }
+
+  /* ─── BIRTHDAY OVERLAY ─── */
+  #birthdayOverlay { align-items: flex-end; padding: 0; }
+  .bday-sheet {
+    background: linear-gradient(170deg, #FFF8F0 0%, #FFF0E8 100%);
+    border-radius: 28px 28px 0 0; width: 100%; max-width: 480px;
+    max-height: 92vh; overflow-y: auto; padding: 0 0 36px;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.25);
+    animation: sheetUp 0.4s cubic-bezier(0.34,1.4,0.64,1);
+  }
+  .bday-header {
+    background: linear-gradient(135deg, #E91E8C 0%, #C2185B 100%);
+    border-radius: 28px 28px 0 0; padding: 22px 24px 18px; text-align: center;
+  }
+  .bday-header h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: white; }
+  .bday-header p { font-family: 'Caveat', cursive; font-size: 16px; color: rgba(255,255,255,0.88); margin-top: 3px; }
+
+  /* Cake wrap */
+  .cake-wrap { display: flex; justify-content: center; padding: 18px 24px 8px; position: relative; overflow: visible; }
+  .cake-svg { width: 280px; height: 240px; overflow: visible; filter: drop-shadow(0 6px 20px rgba(233,30,140,0.2)); }
+
+  /* Candle tap animation */
+  .candle-group { cursor: pointer; transition: transform 0.2s; transform-origin: center bottom; }
+  .candle-group:active { transform: scale(0.94); }
+  .candle-group.blown .flame { display: none; }
+  .candle-group.blown .smoke { display: block; }
+  .smoke { display: none; }
+
+  @keyframes flicker {
+    0%,100% { transform: scaleX(1) scaleY(1); opacity: 1; }
+    25% { transform: scaleX(0.85) scaleY(1.1); opacity: 0.9; }
+    50% { transform: scaleX(1.1) scaleY(0.95); opacity: 1; }
+    75% { transform: scaleX(0.9) scaleY(1.05); opacity: 0.95; }
+  }
+  .flame { animation: flicker 1.8s ease-in-out infinite; transform-origin: center bottom; }
+  .candle-group:nth-child(2) .flame { animation-delay: 0.3s; }
+  .candle-group:nth-child(3) .flame { animation-delay: 0.6s; }
+
+  @keyframes smokeRise {
+    0% { opacity: 0.7; transform: translateY(0) scaleX(1); }
+    100% { opacity: 0; transform: translateY(-20px) scaleX(2); }
+  }
+  .smoke-puff { animation: smokeRise 1.2s ease-out infinite; transform-origin: center; }
+  .smoke-puff:nth-child(2) { animation-delay: 0.4s; }
+
+  @keyframes sparkBurst {
+    0% { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0); }
+  }
+  .spark { animation: sparkBurst 0.6s ease-out forwards; }
+
+  /* Candle cards */
+  .candle-cards { padding: 10px 18px 0; display: flex; flex-direction: column; gap: 12px; }
+  .candle-card {
+    background: white; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 2px 10px rgba(233,30,140,0.08); border: 1.5px solid #FFE0EF;
+    transition: all 0.3s;
+  }
+  .candle-card.locked { opacity: 0.45; }
+  .candle-card-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; user-select: none; }
+  .candle-card.locked .candle-card-header { cursor: default; }
+  .candle-icon { font-size: 22px; flex-shrink: 0; }
+  .candle-title { font-family: 'Caveat', cursive; font-size: 16px; color: #C2185B; flex: 1; line-height: 1.3; }
+  .candle-chevron { font-size: 13px; color: #E91E8C; transition: transform 0.25s; }
+  .candle-card.open .candle-chevron { transform: rotate(180deg); }
+  .candle-body { display: none; padding: 0 16px 16px; }
+  .candle-card.open .candle-body { display: block; }
+  .candle-message { font-family: 'Lora', serif; font-style: italic; font-size: 16px; line-height: 1.7; color: var(--text-dark); white-space: pre-wrap; }
+  .candle-message.empty { color: var(--text-light); }
+  .candle-divider { height: 1px; background: #FFE0EF; margin-bottom: 12px; }
+
+  @keyframes cardFlyIn {
+    0% { transform: translateY(40px) scale(0.94); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .candle-card.fly-in { animation: cardFlyIn 0.45s cubic-bezier(0.34,1.3,0.64,1) both; }
+
+  .bday-close-btn { display: block; margin: 22px 18px 0; width: calc(100% - 36px); background: #C2185B; color: white; border: none; border-radius: 50px; padding: 14px; font-family: 'Lora', serif; font-size: 16px; cursor: pointer; }
+
+  /* Birthday editor */
+  .bday-edit-candle { margin-bottom: 18px; }
+  .bday-edit-candle label { display: block; font-family: 'Caveat', cursive; font-size: 14px; color: var(--text-mid); margin-bottom: 6px; }
+  .bday-edit-candle textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--parchment); background: var(--cream); font-family: 'Lora', serif; font-size: 15px; color: var(--text-dark); min-height: 90px; resize: vertical; line-height: 1.5; }
+  .bday-edit-candle textarea:focus { outline: none; border-color: #E91E8C; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--cream); }
+  ::-webkit-scrollbar-thumb { background: var(--parchment); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- ══════ LOADING ══════ -->
+<div class="screen active" id="loading">
+  <div class="loader-leaf">🌿</div>
+</div>
+
+<!-- ══════ COVER ══════ -->
+<div class="screen" id="cover">
+  <div class="cover-botanical">🌿</div>
+  <div class="cover-label">A little something just for you</div>
+  <h1 class="cover-title">For <em>Bree</em>,<br>with all my love</h1>
+  <p class="cover-subtitle">9 days of little letters,<br>memories, love &amp; celebration.</p>
+  <div class="cover-dates">
+    <span class="cover-date-pill">25 June</span>
+    <span class="cover-date-divider">→</span>
+    <span class="cover-date-pill">3 July</span>
+  </div>
+  <button class="btn-open" onclick="openCalendar()">Open your calendar 🎁</button>
+  <div class="cover-footer">tap a date to unlock today's message ♥</div>
+</div>
+
+<!-- ══════ CALENDAR ══════ -->
+<div class="screen" id="calendar">
+  <div class="cal-header">
+    <div class="cal-header-emoji">🌿</div>
+    <h2>Anniversary & Birthday Countdown</h2>
+    <p id="cal-subtitle">June 25 – July 3</p>
+    <div class="cal-progress"><div class="cal-progress-fill" id="progressFill"></div></div>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <button class="back-btn" id="backBtn" onclick="goBack()">← back</button>
+  <button class="edit-fab" id="editFab" onclick="requestEditAccess()" title="edit">✎</button>
+</div>
+
+<!-- ══════ ENVELOPE OVERLAY ══════ -->
+<div class="overlay" id="envelopeOverlay">
+  <div class="modal-box">
+    <div class="envelope-top" id="envTop">
+      <div class="envelope-emoji" id="envEmoji">💌</div>
+      <div class="envelope-date-label" id="envDateLabel">Day 1 · 25 June</div>
+    </div>
+    <div class="envelope-body">
+      <div class="photo-display" id="photoDisplay" style="display:none;"><img id="photoImg" src="" alt="memory photo"></div>
+      <div class="msg-type-badge" id="msgTypeBadge">💌 A love note</div>
+      <div class="envelope-message" id="envMessage"></div>
+      <div class="envelope-signature" id="envSig">— always yours ♥</div>
+      <button class="btn-close" onclick="closeEnvelope()">Close 🌿</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ ANNIVERSARY OVERLAY ══════ -->
+<div class="overlay" id="anniversaryOverlay" style="align-items:flex-end;padding:0;">
+  <div class="anniv-sheet">
+    <div class="anniv-header">
+      <h2>🌷 4 Years of Us</h2>
+      <p>Happy Anniversary, Bree — tap each petal ♥</p>
+    </div>
+
+    <div class="flower-wrap" id="flowerWrap">
+      <canvas class="sparkle-canvas" id="sparkleCanvas"></canvas>
+      <svg class="flower-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Vivid petal gradients -->
+          <radialGradient id="pg0" cx="50%" cy="75%" r="65%">
+            <stop offset="0%" stop-color="#FFB5C8"/>
+            <stop offset="45%" stop-color="#FF6B9D"/>
+            <stop offset="100%" stop-color="#C2185B"/>
+          </radialGradient>
+          <radialGradient id="pg1" cx="50%" cy="75%" r="65%">
+            <stop offset="0%" stop-color="#FFD580"/>
+            <stop offset="45%" stop-color="#FF8C00"/>
+            <stop offset="100%" stop-color="#D4500A"/>
+          </radialGradient>
+          <radialGradient id="pg2" cx="50%" cy="75%" r="65%">
+            <stop offset="0%" stop-color="#FFA07A"/>
+            <stop offset="45%" stop-color="#FF4500"/>
+            <stop offset="100%" stop-color="#B22222"/>
+          </radialGradient>
+          <radialGradient id="pg3" cx="50%" cy="75%" r="65%">
+            <stop offset="0%" stop-color="#FFE066"/>
+            <stop offset="45%" stop-color="#FFB300"/>
+            <stop offset="100%" stop-color="#E65100"/>
+          </radialGradient>
+          <!-- Centre -->
+          <radialGradient id="cg" cx="38%" cy="32%" r="68%">
+            <stop offset="0%" stop-color="#FFFDE7"/>
+            <stop offset="40%" stop-color="#FFD740"/>
+            <stop offset="80%" stop-color="#F9A825"/>
+            <stop offset="100%" stop-color="#E65100"/>
+          </radialGradient>
+          <!-- Leaf -->
+          <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#81C784"/>
+            <stop offset="100%" stop-color="#2E7D32"/>
+          </linearGradient>
+          <!-- Inner petal highlight -->
+          <radialGradient id="hi0" cx="50%" cy="30%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.55)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <radialGradient id="hi1" cx="50%" cy="30%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.5)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <radialGradient id="hi2" cx="50%" cy="30%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.5)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <radialGradient id="hi3" cx="50%" cy="30%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.5)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <filter id="softglow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+
+        <!-- Stem and leaves -->
+        <path class="stem-line" d="M150 168 Q147 210 143 248" stroke="#4CAF50" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M146 215 Q124 202 121 185 Q134 190 146 215Z" fill="url(#lg)" opacity="0.95"/>
+        <path d="M121 185 Q133 195 146 215" stroke="#2E7D32" stroke-width="1" fill="none"/>
+        <path d="M145 232 Q168 220 172 203 Q159 209 145 232Z" fill="url(#lg)" opacity="0.95"/>
+        <path d="M172 203 Q160 214 145 232" stroke="#2E7D32" stroke-width="1" fill="none"/>
+
+        <!-- PETAL 0 — top · HOT PINK · Year One -->
+        <g class="petal-group" id="petal0" onclick="toggleStem(0)" style="transform:rotate(0deg);transform-origin:150px 150px">
+          <!-- Wide organic teardrop -->
+          <path class="petal-main" d="
+            M150 145
+            C130 128 118 98 120 66
+            C122 42 136 28 150 24
+            C164 28 178 42 180 66
+            C182 98 170 128 150 145Z"
+            fill="url(#pg0)"/>
+          <!-- Highlight sheen -->
+          <path d="
+            M150 140
+            C138 125 130 100 133 72
+            C136 52 143 38 150 34
+            C157 38 162 52 160 72
+            C157 98 158 122 150 140Z"
+            fill="url(#hi0)" opacity="0.7"/>
+          <!-- Centre vein -->
+          <path d="M150 142 Q150 100 150 28" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Side veins -->
+          <path d="M150 100 Q138 88 128 80" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+          <path d="M150 100 Q162 88 172 80" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+          <!-- Dewdrop -->
+          <circle cx="150" cy="46" r="5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="148" cy="44" r="2" fill="rgba(255,255,255,0.9)"/>
+          <text class="petal-label-text" x="150" y="88">Year</text>
+          <text class="petal-label-text" x="150" y="104">One ✦</text>
+        </g>
+
+        <!-- PETAL 1 — right · ORANGE · Challenge -->
+        <g class="petal-group" id="petal1" onclick="toggleStem(1)" style="transform:rotate(90deg);transform-origin:150px 150px">
+          <path class="petal-main" d="
+            M150 145
+            C130 128 118 98 120 66
+            C122 42 136 28 150 24
+            C164 28 178 42 180 66
+            C182 98 170 128 150 145Z"
+            fill="url(#pg1)"/>
+          <path d="
+            M150 140
+            C138 125 130 100 133 72
+            C136 52 143 38 150 34
+            C157 38 162 52 160 72
+            C157 98 158 122 150 140Z"
+            fill="url(#hi1)" opacity="0.7"/>
+          <path d="M150 142 Q150 100 150 28" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M150 100 Q138 88 128 80" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+          <path d="M150 100 Q162 88 172 80" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+          <circle cx="150" cy="46" r="5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="148" cy="44" r="2" fill="rgba(255,255,255,0.9)"/>
+          <text class="petal-label-text" x="150" y="88">Over-</text>
+          <text class="petal-label-text" x="150" y="104">came ✦</text>
+        </g>
+
+        <!-- PETAL 2 — bottom · RED/CORAL · Admire -->
+        <g class="petal-group" id="petal2" onclick="toggleStem(2)" style="transform:rotate(180deg);transform-origin:150px 150px">
+          <path class="petal-main" d="
+            M150 145
+            C130 128 118 98 120 66
+            C122 42 136 28 150 24
+            C164 28 178 42 180 66
+            C182 98 170 128 150 145Z"
+            fill="url(#pg2)"/>
+          <path d="
+            M150 140
+            C138 125 130 100 133 72
+            C136 52 143 38 150 34
+            C157 38 162 52 160 72
+            C157 98 158 122 150 140Z"
+            fill="url(#hi2)" opacity="0.7"/>
+          <path d="M150 142 Q150 100 150 28" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M150 100 Q138 88 128 80" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+          <path d="M150 100 Q162 88 172 80" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+          <circle cx="150" cy="46" r="5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="148" cy="44" r="2" fill="rgba(255,255,255,0.9)"/>
+          <text class="petal-label-text" x="150" y="88">I</text>
+          <text class="petal-label-text" x="150" y="104">Admire ✦</text>
+        </g>
+
+        <!-- PETAL 3 — left · GOLDEN YELLOW · Future -->
+        <g class="petal-group" id="petal3" onclick="toggleStem(3)" style="transform:rotate(270deg);transform-origin:150px 150px">
+          <path class="petal-main" d="
+            M150 145
+            C130 128 118 98 120 66
+            C122 42 136 28 150 24
+            C164 28 178 42 180 66
+            C182 98 170 128 150 145Z"
+            fill="url(#pg3)"/>
+          <path d="
+            M150 140
+            C138 125 130 100 133 72
+            C136 52 143 38 150 34
+            C157 38 162 52 160 72
+            C157 98 158 122 150 140Z"
+            fill="url(#hi3)" opacity="0.7"/>
+          <path d="M150 142 Q150 100 150 28" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M150 100 Q138 88 128 80" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+          <path d="M150 100 Q162 88 172 80" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none"/>
+          <circle cx="150" cy="46" r="5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="148" cy="44" r="2" fill="rgba(255,255,255,0.9)"/>
+          <text class="petal-label-text" x="150" y="88">Our</text>
+          <text class="petal-label-text" x="150" y="104">Future ✦</text>
+        </g>
+
+        <!-- Centre -->
+        <g class="flower-centre" filter="url(#softglow)">
+          <circle cx="150" cy="150" r="30" fill="url(#cg)" stroke="#FF8F00" stroke-width="2"/>
+          <circle cx="150" cy="150" r="22" fill="none" stroke="rgba(255,200,0,0.4)" stroke-width="1"/>
+          <circle cx="143" cy="143" r="2.5" fill="rgba(180,100,0,0.4)"/>
+          <circle cx="157" cy="141" r="2"   fill="rgba(180,100,0,0.35)"/>
+          <circle cx="150" cy="154" r="2.2" fill="rgba(180,100,0,0.35)"/>
+          <circle cx="141" cy="153" r="1.8" fill="rgba(180,100,0,0.3)"/>
+          <circle cx="159" cy="152" r="2.5" fill="rgba(180,100,0,0.38)"/>
+          <circle cx="150" cy="143" r="1.5" fill="rgba(180,100,0,0.28)"/>
+          <text font-family="Georgia,serif" font-size="22" text-anchor="middle" x="150" y="158" fill="#7A2E00">♥</text>
+        </g>
+      </svg>
+    </div>
+
+    <p class="stems-intro">Tap a petal to open it</p>
+
+    <!-- 4 stem cards -->
+    <div class="stem-cards" id="stemCards">
+      <div class="stem-card locked" id="stemCard0">
+        <div class="stem-card-header" onclick="toggleStem(0)">
+          <div class="stem-icon">🌸</div>
+          <div class="stem-title">A favourite memory from our first year of marriage</div>
+          <div class="stem-chevron">▼</div>
+        </div>
+        <div class="stem-body">
+          <div class="stem-divider"></div>
+          <div class="stem-message empty" id="stemMsg0">This petal hasn't been written yet.</div>
+        </div>
+      </div>
+
+      <div class="stem-card locked" id="stemCard1">
+        <div class="stem-card-header" onclick="toggleStem(1)">
+          <div class="stem-icon">💪</div>
+          <div class="stem-title">A challenge we overcame together</div>
+          <div class="stem-chevron">▼</div>
+        </div>
+        <div class="stem-body">
+          <div class="stem-divider"></div>
+          <div class="stem-message empty" id="stemMsg1">This petal hasn't been written yet.</div>
+        </div>
+      </div>
+
+      <div class="stem-card locked" id="stemCard2">
+        <div class="stem-card-header" onclick="toggleStem(2)">
+          <div class="stem-icon">✨</div>
+          <div class="stem-title">Something I admire about you as a mother &amp; partner</div>
+          <div class="stem-chevron">▼</div>
+        </div>
+        <div class="stem-body">
+          <div class="stem-divider"></div>
+          <div class="stem-message empty" id="stemMsg2">This petal hasn't been written yet.</div>
+        </div>
+      </div>
+
+      <div class="stem-card locked" id="stemCard3">
+        <div class="stem-card-header" onclick="toggleStem(3)">
+          <div class="stem-icon">🌅</div>
+          <div class="stem-title">Something I'm excited about for our future together</div>
+          <div class="stem-chevron">▼</div>
+        </div>
+        <div class="stem-body">
+          <div class="stem-divider"></div>
+          <div class="stem-message empty" id="stemMsg3">This petal hasn't been written yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final note — appears after all 4 petals revealed -->
+    <div id="annexFinalCard" style="display:none; padding: 0 18px; margin-top: 14px;">
+      <div class="stem-card" id="annexFinalInner" style="border-color: rgba(212,165,60,0.4); background: linear-gradient(135deg, #FFFDF5 0%, #FFF8E6 100%);" onclick="toggleAnnexFinal()">
+        <div class="stem-card-header">
+          <div class="stem-icon">💌</div>
+          <div class="stem-title" style="color: var(--brown); font-size:17px;">A note from me to you</div>
+          <div class="stem-chevron" id="annexFinalChevron">▼</div>
+        </div>
+        <div class="stem-body" id="annexFinalBody" style="display:none;">
+          <div class="stem-divider"></div>
+          <div id="annexFinalPhoto" style="display:none; margin-bottom:14px; border-radius:10px; overflow:hidden;">
+            <img id="annexFinalPhotoImg" src="" style="width:100%; display:block; max-height:280px; object-fit:cover; border-radius:10px;">
+          </div>
+          <div class="stem-message" id="annexFinalMsg" style="font-style:italic;">This note hasn't been written yet.</div>
+          <div style="font-family:'Caveat',cursive; font-size:19px; color:var(--terracotta); text-align:right; margin-top:14px;" id="annexFinalSig">— always yours ♥</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="anniv-close-btn" onclick="closeAnniversary()">Close 🌷</button>
+  </div>
+</div>
+
+<!-- ══════ BIRTHDAY OVERLAY ══════ -->
+<div class="overlay" id="birthdayOverlay" style="align-items:flex-end;padding:0;">
+  <div class="bday-sheet">
+    <div class="bday-header">
+      <h2>🎂 Happy 36th Birthday, Bree!</h2>
+      <p>Tap each candle to blow it out ♥</p>
+    </div>
+    <div class="cake-wrap" id="cakeWrap">
+      <canvas id="sparkleCanvas2" style="position:absolute;top:0;left:0;width:100%;height:calc(100% + 180px);pointer-events:none;z-index:10;"></canvas>
+      <svg class="cake-svg" viewBox="0 0 280 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="frostGrad" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#FFB5D8"/><stop offset="100%" stop-color="#E91E8C"/>
+          </radialGradient>
+          <radialGradient id="cakeGrad" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#FFEAA0"/><stop offset="100%" stop-color="#F4C430"/>
+          </radialGradient>
+          <radialGradient id="cake2Grad" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#FFD0A0"/><stop offset="100%" stop-color="#E8A020"/>
+          </radialGradient>
+        </defs>
+        <!-- Plate -->
+        <ellipse cx="140" cy="204" rx="112" ry="10" fill="#F0F0F0" stroke="#DDD" stroke-width="1"/>
+        <!-- Bottom tier -->
+        <rect x="28" y="158" width="224" height="46" rx="8" fill="url(#cake2Grad)"/>
+        <path d="M36 160 Q50 172 64 160 Q78 172 92 160 Q106 172 120 160 Q134 172 148 160 Q162 172 176 160 Q190 172 204 160 Q218 172 232 160 Q244 170 244 160" stroke="#FFB5D8" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <!-- Sprinkles -->
+        <rect x="50"  y="176" width="9" height="3" rx="2" fill="#E91E8C" transform="rotate(-30,54,178)"/>
+        <rect x="88"  y="182" width="9" height="3" rx="2" fill="#4CAF50" transform="rotate(20,92,184)"/>
+        <rect x="128" y="174" width="9" height="3" rx="2" fill="#2196F3" transform="rotate(-15,132,176)"/>
+        <rect x="168" y="180" width="9" height="3" rx="2" fill="#FF9800" transform="rotate(25,172,182)"/>
+        <rect x="208" y="175" width="9" height="3" rx="2" fill="#9C27B0" transform="rotate(-20,212,177)"/>
+        <rect x="70"  y="188" width="7" height="3" rx="2" fill="#FF5722" transform="rotate(10,73,190)"/>
+        <rect x="152" y="186" width="7" height="3" rx="2" fill="#00BCD4" transform="rotate(-25,155,188)"/>
+        <rect x="192" y="188" width="7" height="3" rx="2" fill="#E91E8C" transform="rotate(15,195,190)"/>
+        <!-- Top tier -->
+        <rect x="58" y="104" width="164" height="56" rx="8" fill="url(#cakeGrad)"/>
+        <path d="M66 106 Q80 118 94 106 Q108 118 122 106 Q136 118 150 106 Q164 118 178 106 Q192 118 206 106 Q216 116 214 106" stroke="white" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.9"/>
+        <!-- "36" on cake -->
+        <text font-family="'Playfair Display',Georgia,serif" font-size="32" font-weight="bold" text-anchor="middle" x="140" y="150" fill="#C2185B" opacity="0.9">36</text>
+        <!-- Extra sprinkles top -->
+        <circle cx="72"  cy="128" r="3" fill="#E91E8C"/>
+        <circle cx="200" cy="124" r="3" fill="#4CAF50"/>
+        <circle cx="186" cy="138" r="2.5" fill="#2196F3"/>
+        <circle cx="80"  cy="142" r="2.5" fill="#FF9800"/>
+
+        <!-- CANDLE 1 — left · pink -->
+        <g class="candle-group" id="bdayCandle0">
+          <rect x="86" y="70" width="16" height="36" rx="3" fill="#FF6B9D"/>
+          <rect x="86" y="70" width="16" height="6"  rx="3" fill="#C2185B" opacity="0.4"/>
+          <rect x="86" y="78" width="16" height="4" fill="white" opacity="0.25"/>
+          <rect x="86" y="88" width="16" height="4" fill="white" opacity="0.25"/>
+          <rect x="86" y="98" width="16" height="4" fill="white" opacity="0.25"/>
+          <g class="flame" style="transform-origin:94px 70px">
+            <ellipse cx="94" cy="58" rx="7" ry="12" fill="#FF6B00" opacity="0.85"/>
+            <ellipse cx="94" cy="61" rx="5" ry="8"  fill="#FFD700"/>
+            <ellipse cx="94" cy="64" rx="3" ry="5"  fill="white" opacity="0.65"/>
+          </g>
+          <g class="smoke">
+            <ellipse class="smoke-puff" cx="94" cy="62" rx="3" ry="6" fill="#999" opacity="0.5"/>
+            <ellipse class="smoke-puff" cx="94" cy="55" rx="2" ry="4" fill="#999" opacity="0.3"/>
+          </g>
+        </g>
+
+        <!-- CANDLE 2 — centre · gold -->
+        <g class="candle-group" id="bdayCandle1">
+          <rect x="132" y="60" width="16" height="46" rx="3" fill="#FFD700"/>
+          <rect x="132" y="60" width="16" height="6"  rx="3" fill="#F57F00" opacity="0.4"/>
+          <rect x="132" y="68" width="16" height="4" fill="white" opacity="0.25"/>
+          <rect x="132" y="78" width="16" height="4" fill="white" opacity="0.25"/>
+          <rect x="132" y="88" width="16" height="4" fill="white" opacity="0.25"/>
+          <rect x="132" y="98" width="16" height="4" fill="white" opacity="0.25"/>
+          <g class="flame" style="transform-origin:140px 60px">
+            <ellipse cx="140" cy="48" rx="7" ry="12" fill="#FF6B00" opacity="0.85"/>
+            <ellipse cx="140" cy="51" rx="5" ry="8"  fill="#FFD700"/>
+            <ellipse cx="140" cy="54" rx="3" ry="5"  fill="white" opacity="0.65"/>
+          </g>
+          <g class="smoke">
+            <ellipse class="smoke-puff" cx="140" cy="52" rx="3" ry="6" fill="#999" opacity="0.5"/>
+            <ellipse class="smoke-puff" cx="140" cy="45" rx="2" ry="4" fill="#999" opacity="0.3"/>
+          </g>
+        </g>
+
+        <!-- CANDLE 3 — right · purple -->
+        <g class="candle-group" id="bdayCandle2">
+          <rect x="178" y="70" width="16" height="36" rx="3" fill="#CE93D8"/>
+          <rect x="178" y="70" width="16" height="6"  rx="3" fill="#7B1FA2" opacity="0.4"/>
+          <rect x="178" y="78" width="16" height="4" fill="white" opacity="0.25"/>
+          <rect x="178" y="88" width="16" height="4" fill="white" opacity="0.25"/>
+          <rect x="178" y="98" width="16" height="4" fill="white" opacity="0.25"/>
+          <g class="flame" style="transform-origin:186px 70px">
+            <ellipse cx="186" cy="58" rx="7" ry="12" fill="#FF6B00" opacity="0.85"/>
+            <ellipse cx="186" cy="61" rx="5" ry="8"  fill="#FFD700"/>
+            <ellipse cx="186" cy="64" rx="3" ry="5"  fill="white" opacity="0.65"/>
+          </g>
+          <g class="smoke">
+            <ellipse class="smoke-puff" cx="186" cy="62" rx="3" ry="6" fill="#999" opacity="0.5"/>
+            <ellipse class="smoke-puff" cx="186" cy="55" rx="2" ry="4" fill="#999" opacity="0.3"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <p style="text-align:center;font-family:'Caveat',cursive;font-size:15px;color:#C2185B;padding:0 24px 4px;opacity:0.8;">Tap a candle to blow it out ✨</p>
+
+    <div class="candle-cards" id="candleCards">
+      <div class="candle-card locked" id="candleCard0">
+        <div class="candle-card-header" id="candleCardHeader0">
+          <div class="candle-icon">🕯️</div>
+          <div class="candle-title">Candle 1</div>
+          <div class="candle-chevron">▼</div>
+        </div>
+        <div class="candle-body">
+          <div class="candle-divider"></div>
+          <div class="candle-message empty" id="candleMsg0">This candle hasn't been written yet.</div>
+        </div>
+      </div>
+      <div class="candle-card locked" id="candleCard1">
+        <div class="candle-card-header" id="candleCardHeader1">
+          <div class="candle-icon">🕯️</div>
+          <div class="candle-title">Candle 2</div>
+          <div class="candle-chevron">▼</div>
+        </div>
+        <div class="candle-body">
+          <div class="candle-divider"></div>
+          <div class="candle-message empty" id="candleMsg1">This candle hasn't been written yet.</div>
+        </div>
+      </div>
+      <div class="candle-card locked" id="candleCard2">
+        <div class="candle-card-header" id="candleCardHeader2">
+          <div class="candle-icon">🕯️</div>
+          <div class="candle-title">Candle 3</div>
+          <div class="candle-chevron">▼</div>
+        </div>
+        <div class="candle-body">
+          <div class="candle-divider"></div>
+          <div class="candle-message empty" id="candleMsg2">This candle hasn't been written yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final note — appears after all 3 candles blown -->
+    <div id="bdayFinalCard" style="display:none; padding: 0 18px; margin-top: 14px;">
+      <div class="candle-card" id="bdayFinalInner" style="border-color: rgba(233,30,140,0.3); background: linear-gradient(135deg, #FFF5F9 0%, #FFE8F3 100%);">
+        <div class="candle-card-header" id="bdayFinalHeader">
+          <div class="candle-icon">💌</div>
+          <div class="candle-title" style="color:#C2185B; font-size:17px;">A note from me to you</div>
+          <div class="candle-chevron" id="bdayFinalChevron">▼</div>
+        </div>
+        <div class="candle-body" id="bdayFinalBody" style="display:none;">
+          <div class="candle-divider"></div>
+          <div id="bdayFinalPhoto" style="display:none; margin-bottom:14px; border-radius:10px; overflow:hidden;">
+            <img id="bdayFinalPhotoImg" src="" style="width:100%; display:block; max-height:280px; object-fit:cover; border-radius:10px;">
+          </div>
+          <div class="candle-message" id="bdayFinalMsg">This note hasn't been written yet.</div>
+          <div style="font-family:'Caveat',cursive; font-size:19px; color:#E91E8C; text-align:right; margin-top:14px;" id="bdayFinalSig">— always yours ♥</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="bday-close-btn" id="bdayCloseBtn">Close 🎂</button>
+  </div>
+</div>
+
+<div class="overlay" id="pinOverlay">
+  <div class="modal-box">
+    <div class="pin-box">
+      <h3>Editor access</h3>
+      <p>Enter your PIN to write today's messages</p>
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" class="pin-input" id="pinInput" placeholder="••••">
+      <div class="pin-actions">
+        <button class="pin-cancel" onclick="closePinModal()">Cancel</button>
+        <button class="pin-submit" onclick="submitPin()">Unlock</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ EDITOR LIST ══════ -->
+<div class="screen" id="editor">
+  <div class="editor-header">
+    <h2>✎ Edit Messages</h2>
+    <div style="display:flex;gap:8px;">
+      <button id="exportBtn" style="background:rgba(196,112,74,0.7);">Export for Bree 📦</button>
+      <button id="editorDoneBtn">Done</button>
+    </div>
+  </div>
+  <div style="font-family:'Caveat',cursive;font-size:13px;color:rgba(245,239,228,0.6);text-align:center;padding:6px 16px 0;">Write all messages → tap Export → send that file to Bree</div>
+  <div class="editor-day-list" id="editorDayList"></div>
+</div>
+
+<!-- ══════ DAY EDIT MODAL ══════ -->
+<div class="overlay" id="dayEditOverlay">
+  <div class="modal-box">
+    <div class="day-edit-body">
+      <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:18px;" id="dayEditTitle">Edit Day 1</h3>
+
+      <label>Type</label>
+      <select id="editType">
+        <option value="note">💌 Love note</option>
+        <option value="reason">✨ Reason I love you</option>
+        <option value="memory">📸 Memory</option>
+        <option value="special">🎉 Special occasion</option>
+      </select>
+
+      <label>Icon</label>
+      <div class="icon-row" id="iconRow"></div>
+
+      <label>Message</label>
+      <textarea id="editMessage" placeholder="Write your message to Bree here..."></textarea>
+
+      <label>Signature (optional)</label>
+      <input type="text" id="editSig" placeholder="— always yours ♥">
+
+      <label>Photo (optional)</label>
+      <div class="photo-upload-area" id="photoUploadArea">
+        <label class="upload-btn-label">
+          📷 Upload a photo
+          <input type="file" accept="image/*" id="photoFileInput">
+        </label>
+      </div>
+
+      <div class="day-edit-actions">
+        <button class="ed-cancel" id="dayEditCancelBtn">Cancel</button>
+        <button class="ed-save" id="dayEditSaveBtn">Save</button>
+      </div>
+      <div class="save-indicator" id="saveIndicator"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ TOAST ══════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════
+const START_DATE = new Date('2026-06-25T00:00:00');
+const TOTAL_DAYS = 9;
+const EDIT_PIN = '2972'; // change this to whatever PIN you like
+
+// ── PREVIEW MODE: set to true to see the calendar as if it's June 25th ──
+const PREVIEW_MODE = false;
+const PREVIEW_DAY_INDEX = 0; // 0 = anniversary, 8 = birthday
+
+function getDayIndex() {
+  if (PREVIEW_MODE) return PREVIEW_DAY_INDEX;
+  const now = new Date();
+  const diff = Math.floor((now - START_DATE) / 86400000);
+  return diff;
+}
+
+// Special days: dayIndex (0-based) -> { icon, label }
+const SPECIAL_DAYS = {
+  0: { icon: '🌷', label: '4th Anniversary' },   // June 25
+  8: { icon: '🎂', label: "Bree's Birthday" } // July 3 (day 9, index 8)
+};
+
+const TYPE_META = {
+  note:    { label: '💌 A love note', emoji: '💌' },
+  memory:  { label: '📸 A memory', emoji: '📸' },
+  reason:  { label: '✨ A reason I love you', emoji: '✨' },
+  special: { label: '🎉 A special day', emoji: '🎉' }
+};
+
+const ICON_CHOICES = ['💌','🌿','🌸','☕','🍂','🌙','✨','🎂','🥂','📸','🎁','☀️','💫','🕊️','🍃','💛','💚','🌻','🕯️','🎶'];
+
+// ══════════════════════════════════════════
+//  STORAGE — localStorage (reliable, built-in, no external dependencies)
+//  Text stored in one key, each photo in its own key to avoid size limits
+// ══════════════════════════════════════════
+let messagesData = {};
+let photosData = {};
+let openedDays = [];
+
+function saveMessages() {
+  try {
+    // Text only — no photos embedded
+    const textOnly = {};
+    Object.keys(messagesData).forEach(k => {
+      const d = { ...messagesData[k] };
+      delete d.photo; delete d.finalPhoto;
+      textOnly[k] = d;
+    });
+    localStorage.setItem('bree-messages', JSON.stringify(textOnly));
+
+    // Each photo in its own key
+    Object.keys(photosData).forEach(k => {
+      try {
+        localStorage.setItem('bree-photo-' + k, photosData[k]);
+      } catch(e) {
+        // If individual photo too large, skip silently
+        console.warn('Photo too large for key:', k);
+      }
+    });
+    return true;
+  } catch (e) {
+    console.error('Save error:', e);
+    return false;
+  }
+}
+
+function loadAllData() {
+  try { const raw = localStorage.getItem('bree-messages'); messagesData = raw ? JSON.parse(raw) : {}; } catch(e) { messagesData = {}; }
+  photosData = {};
+  for (let i = 0; i < TOTAL_DAYS; i++) {
+    try { const p = localStorage.getItem('bree-photo-day-' + i); if (p) photosData['day-' + i] = p; } catch(e) {}
+  }
+  try { const p = localStorage.getItem('bree-photo-anniv-final'); if (p) photosData['anniv-final'] = p; } catch(e) {}
+  try { const p = localStorage.getItem('bree-photo-bday-final'); if (p) photosData['bday-final'] = p; } catch(e) {}
+  try { const raw = localStorage.getItem('bree-opened'); openedDays = raw ? JSON.parse(raw) : []; } catch(e) { openedDays = []; }
+}
+
+function saveOpened() {
+  try { localStorage.setItem('bree-opened', JSON.stringify(openedDays)); } catch(e) {}
+}
+
+// Photo helpers
+function getPhoto(dayIndex) { return photosData['day-' + dayIndex] || null; }
+function setPhoto(dayIndex, data) {
+  if (data) photosData['day-' + dayIndex] = data;
+  else delete photosData['day-' + dayIndex];
+}
+function getAnnivFinalPhoto() { return photosData['anniv-final'] || null; }
+function setAnnivFinalPhoto(data) {
+  if (data) photosData['anniv-final'] = data;
+  else delete photosData['anniv-final'];
+}
+
+function markOpened(day) {
+  if (!openedDays.includes(day)) {
+    openedDays.push(day);
+    saveOpened();
+  }
+}
+
+// ══════════════════════════════════════════
+//  DATE HELPERS
+// ══════════════════════════════════════════
+function formatDate(dayIndex) {
+  const d = new Date(START_DATE);
+  d.setDate(d.getDate() + dayIndex);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+async function init() {
+  // Safety timeout — if anything blocks, proceed after 1.5s anyway
+  const timeout = setTimeout(() => {
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('cover').classList.add('active');
+  }, 1500);
+
+  try {
+    loadAllData();
+  } catch(e) {
+    console.warn('Load error:', e);
+  }
+
+  clearTimeout(timeout);
+  document.getElementById('loading').classList.remove('active');
+  document.getElementById('cover').classList.add('active');
+}
+init();
+
+// ══════════════════════════════════════════
+//  SCREEN NAV
+// ══════════════════════════════════════════
+function openCalendar() {
+  document.getElementById('cover').classList.remove('active');
+  document.getElementById('calendar').classList.add('active');
+  document.getElementById('backBtn').style.display = 'block';
+  document.getElementById('editFab').style.display = 'flex';
+  buildGrid();
+}
+function goBack() {
+  document.getElementById('calendar').classList.remove('active');
+  document.getElementById('cover').classList.add('active');
+  document.getElementById('backBtn').style.display = 'none';
+  document.getElementById('editFab').style.display = 'none';
+}
+
+// ══════════════════════════════════════════
+//  GRID
+// ══════════════════════════════════════════
+function buildGrid() {
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = '';
+  const today = getDayIndex();
+
+  for (let i = 0; i < TOTAL_DAYS; i++) {
+    const card = document.createElement('div');
+    card.className = 'day-card';
+    const displayDay = i + 1;
+    const dateLabel = formatDate(i);
+    const special = SPECIAL_DAYS[i];
+
+    if (special) card.classList.add('special');
+
+    if (today < 0) {
+      // Calendar hasn't started yet — everything locked
+      card.classList.add('locked');
+      if (special) {
+        card.innerHTML = `<div class="special-icon">${special.icon}</div><div class="day-label">${dateLabel}</div>`;
+      } else {
+        card.innerHTML = `<div class="lock-icon">🔒</div><div class="day-label">${dateLabel}</div>`;
+      }
+      card.onclick = () => showToast(`Unlocks on ${dateLabel} 🌿`);
+      grid.appendChild(card);
+      continue;
+    }
+
+    if (i > today) {
+      card.classList.add('locked');
+      if (special) {
+        card.innerHTML = `<div class="special-icon">${special.icon}</div><div class="day-label">${dateLabel}</div>`;
+      } else {
+        card.innerHTML = `<div class="lock-icon">🔒</div><div class="day-label">${dateLabel}</div>`;
+      }
+      card.onclick = () => showToast(`Unlocks on ${dateLabel} 🌿`);
+    } else if (i === today) {
+      const wasOpened = openedDays.includes(i);
+      card.classList.add(wasOpened ? 'opened' : 'today');
+      if (special) {
+        card.innerHTML = `<div class="special-icon">${special.icon}</div><div class="day-label">${dateLabel}</div>`;
+      } else {
+        card.innerHTML = `<div class="day-label">${dateLabel}</div>`;
+      }
+      card.onclick = () => openMessage(i);
+    } else {
+      const wasOpened = openedDays.includes(i);
+      card.classList.add(wasOpened ? 'opened' : 'available');
+      if (special) {
+        card.innerHTML = `<div class="special-icon">${special.icon}</div><div class="day-label">${dateLabel}</div>`;
+      } else {
+        card.innerHTML = `<div class="day-label">${dateLabel}</div>`;
+      }
+      card.onclick = () => openMessage(i);
+    }
+    grid.appendChild(card);
+  }
+
+  const pct = today >= 0 ? Math.round((Math.min(today + 1, TOTAL_DAYS) / TOTAL_DAYS) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('cal-subtitle').textContent =
+    today < 0 ? 'Opens on 25 June 💌'
+    : today >= TOTAL_DAYS ? 'All 9 days unlocked 🌿'
+    : `Day ${today + 1} of ${TOTAL_DAYS} unlocked`;
+}
+
+// ══════════════════════════════════════════
+//  MESSAGE VIEW (envelope)
+// ══════════════════════════════════════════
+function openMessage(dayIndex) {
+  markOpened(dayIndex);
+  buildGrid();
+
+  // Day 8 = birthday — special cake view
+  if (dayIndex === 8) {
+    openBirthday();
+    return;
+  }
+  if (dayIndex === 0) {
+    openAnniversary();
+    return;
+  }
+
+  const msg = messagesData[dayIndex];
+  const special = SPECIAL_DAYS[dayIndex];
+  const meta = TYPE_META[(msg && msg.type) || (special ? 'special' : 'note')] || TYPE_META.note;
+  const icon = (msg && msg.icon) || (special ? special.icon : meta.emoji);
+
+  document.getElementById('envTop').className = 'envelope-top' + (special ? ' gold' : '');
+  document.getElementById('envEmoji').textContent = icon;
+  document.getElementById('envDateLabel').textContent =
+    (special ? special.label + ' · ' : `Day ${dayIndex + 1} · `) + formatDate(dayIndex);
+  document.getElementById('msgTypeBadge').textContent = meta.label;
+
+  const msgEl = document.getElementById('envMessage');
+  if (msg && msg.message && msg.message.trim()) {
+    msgEl.textContent = msg.message;
+    msgEl.classList.remove('empty');
+  } else {
+    msgEl.textContent = "This message hasn't been written yet — tap the ✎ on the calendar to add it.";
+    msgEl.classList.add('empty');
+  }
+
+  document.getElementById('envSig').textContent = (msg && msg.sig) || '— always yours ♥';
+
+  const photoDisplay = document.getElementById('photoDisplay');
+  const photoImg = document.getElementById('photoImg');
+  const photo = getPhoto(dayIndex);
+  if (photo) {
+    photoImg.src = photo;
+    photoDisplay.style.display = 'block';
+  } else {
+    photoDisplay.style.display = 'none';
+  }
+
+  document.getElementById('envelopeOverlay').classList.add('show');
+}
+function closeEnvelope() {
+  document.getElementById('envelopeOverlay').classList.remove('show');
+}
+
+// ══════════════════════════════════════════
+//  ANNIVERSARY FLOWER
+// ══════════════════════════════════════════
+const STEM_PROMPTS = [
+  { icon: '🌸', title: 'A favourite memory from our first year of marriage' },
+  { icon: '💪', title: 'A challenge we overcame together' },
+  { icon: '✨', title: 'Something I admire about you as a mother & partner' },
+  { icon: '🌅', title: "Something I'm excited about for our future together" }
+];
+
+let revealedStems = new Set();
+
+function openAnniversary() {
+  const data = messagesData[0] || {};
+  const stems = data.stems || ['', '', '', ''];
+
+  revealedStems = new Set();
+
+  for (let i = 0; i < 4; i++) {
+    const card = document.getElementById('stemCard' + i);
+    const msgEl = document.getElementById('stemMsg' + i);
+    const petal = document.getElementById('petal' + i);
+
+    card.classList.add('locked');
+    card.classList.remove('open');
+    petal.classList.remove('revealed');
+    petal.classList.remove('spun');
+    // Re-trigger bloom animation
+    petal.style.animation = 'none';
+    void petal.offsetWidth;
+    petal.style.animation = '';
+
+    if (stems[i] && stems[i].trim()) {
+      msgEl.textContent = stems[i];
+      msgEl.classList.remove('empty');
+    } else {
+      msgEl.textContent = "This petal hasn't been written yet.";
+      msgEl.classList.add('empty');
+    }
+  }
+
+  // Final note card — hide until all petals revealed
+  const finalCard = document.getElementById('annexFinalCard');
+  finalCard.style.display = 'none';
+  finalCard.classList.remove('visible');
+  document.getElementById('annexFinalBody').style.display = 'none';
+  document.getElementById('annexFinalChevron').style.transform = '';
+
+  // Populate final card content
+  const finalMsg = document.getElementById('annexFinalMsg');
+  const finalSig = document.getElementById('annexFinalSig');
+  const finalPhoto = document.getElementById('annexFinalPhoto');
+  const finalPhotoImg = document.getElementById('annexFinalPhotoImg');
+
+  if (data.finalMessage && data.finalMessage.trim()) {
+    finalMsg.textContent = data.finalMessage;
+    finalMsg.classList.remove('empty');
+  } else {
+    finalMsg.textContent = "This note hasn't been written yet.";
+    finalMsg.classList.add('empty');
+  }
+  finalSig.textContent = data.finalSig || '— always yours ♥';
+  const annivPhoto = getAnnivFinalPhoto();
+  if (annivPhoto) {
+    finalPhotoImg.src = annivPhoto;
+    finalPhoto.style.display = 'block';
+  } else {
+    finalPhoto.style.display = 'none';
+  }
+
+  document.getElementById('anniversaryOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function checkShowFinalCard() {
+  if (revealedStems.size === 4) {
+    const finalCard = document.getElementById('annexFinalCard');
+    finalCard.style.display = 'block';
+    // Small delay so it appears after card animation settles
+    setTimeout(() => {
+      finalCard.classList.add('visible');
+      setTimeout(() => finalCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+    }, 600);
+  }
+}
+
+function toggleAnnexFinal() {
+  const body = document.getElementById('annexFinalBody');
+  const chevron = document.getElementById('annexFinalChevron');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+  if (!isOpen) {
+    setTimeout(() => document.getElementById('annexFinalCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  }
+}
+
+// Petal tap positions relative to flower-wrap centre (for sparkle origin)
+const PETAL_DIRS = [
+  { x: 0,   y: -1  },  // top
+  { x: 1,   y: 0   },  // right
+  { x: 0,   y: 1   },  // bottom
+  { x: -1,  y: 0   },  // left
+];
+
+function toggleStem(index) {
+  const card = document.getElementById('stemCard' + index);
+  const petal = document.getElementById('petal' + index);
+
+  // Already revealed — just toggle card open/close
+  if (!card.classList.contains('locked')) {
+    card.classList.toggle('open');
+    if (card.classList.contains('open')) {
+      setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    }
+    return;
+  }
+
+  // ── First tap: petal falls elegantly ──
+  card.classList.remove('locked');
+  revealedStems.add(index);
+
+  // 1. Add the falling animation class for this petal index
+  petal.classList.add('falling-' + index);
+
+  // 2. After fall completes, mark as gone
+  setTimeout(() => {
+    petal.classList.remove('falling-' + index);
+    petal.classList.add('spun');
+  }, 2500);
+
+  // 3. Release drifting petal particles
+  driftingPetals(index);
+
+  // 4. Gentle centre pulse (delayed so it feels like a response)
+  setTimeout(() => {
+    const centre = document.querySelector('.flower-centre');
+    centre.classList.remove('pulse');
+    void centre.offsetWidth;
+    centre.classList.add('pulse');
+  }, 400);
+
+  // 5. Card flies in after petal is well underway
+  setTimeout(() => {
+    card.classList.add('fly-in', 'open');
+    setTimeout(() => card.classList.remove('fly-in'), 600);
+    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+    // Check if all petals now revealed → show final note
+    checkShowFinalCard();
+  }, 900);
+}
+
+// ── Drifting fallen petal particles ──
+function driftingPetals(petalIndex) {
+  const canvas = document.getElementById('sparkleCanvas');
+  const wrap = document.getElementById('flowerWrap');
+  canvas.width = wrap.offsetWidth;
+  canvas.height = wrap.offsetHeight + 180; // extend below wrap for falling
+  const ctx = canvas.getContext('2d');
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height * 0.42;
+
+  // Petal colours matching SVG
+  const PETAL_COLORS = [
+    ['#FFB5C8','#FF6B9D','#C2185B'],  // pink
+    ['#FFD580','#FF8C00','#D4500A'],  // orange
+    ['#FFA07A','#FF4500','#B22222'],  // red
+    ['#FFE066','#FFB300','#E65100'],  // yellow
+  ];
+  const colors = PETAL_COLORS[petalIndex];
+
+  // Starting position near the petal's base (centre of flower)
+  const startX = cx + PETAL_DIRS[petalIndex].x * 40;
+  const startY = cy + PETAL_DIRS[petalIndex].y * 40;
+
+  const particles = [];
+  const COUNT = 18;
+
+  for (let i = 0; i < COUNT; i++) {
+    const delay = i * 55; // stagger launches
+    const driftDir = (Math.random() - 0.5) * 2; // left or right drift bias
+    particles.push({
+      x: startX + (Math.random() - 0.5) * 30,
+      y: startY + (Math.random() - 0.5) * 20,
+      vx: driftDir * (0.4 + Math.random() * 1.2),
+      vy: 0.3 + Math.random() * 0.8,
+      r: 5 + Math.random() * 9,       // bigger petal fragments
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 0,                         // starts invisible until delay
+      targetAlpha: 0.8 + Math.random() * 0.2,
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.04, // slow graceful tumble
+      delay,
+      age: 0,
+      wobble: Math.random() * Math.PI * 2, // side-to-side sway phase
+      wobbleSpeed: 0.025 + Math.random() * 0.02,
+      wobbleAmp: 0.3 + Math.random() * 0.7,
+    });
+  }
+
+  const TOTAL_FRAMES = 200;
+  let frame = 0;
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+      p.age++;
+      if (p.age < p.delay / 16) return; // wait for stagger
+
+      // Gentle side-to-side sway (like petals in a breeze)
+      p.wobble += p.wobbleSpeed;
+      p.vx += Math.sin(p.wobble) * p.wobbleAmp * 0.06;
+      p.vx *= 0.98; // air resistance
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.018; // very gentle gravity
+      p.rot += p.rotV;
+
+      // Fade in quickly, then slowly fade out near bottom
+      const progress = p.age / TOTAL_FRAMES;
+      if (progress < 0.15) {
+        p.alpha = Math.min(p.targetAlpha, p.alpha + 0.08);
+      } else if (progress > 0.65) {
+        p.alpha *= 0.97;
+      }
+
+      if (p.alpha <= 0.01) return;
+
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+
+      // Draw organic petal shape
+      ctx.beginPath();
+      ctx.moveTo(0, -p.r * 2);
+      ctx.bezierCurveTo(p.r * 1.2, -p.r * 1.2, p.r * 1.0, p.r * 0.8, 0, p.r * 1.8);
+      ctx.bezierCurveTo(-p.r * 1.0, p.r * 0.8, -p.r * 1.2, -p.r * 1.2, 0, -p.r * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+
+      // Subtle highlight on petal
+      ctx.beginPath();
+      ctx.moveTo(0, -p.r * 1.8);
+      ctx.bezierCurveTo(p.r * 0.4, -p.r * 1.2, p.r * 0.3, -p.r * 0.2, 0, p.r * 0.6);
+      ctx.bezierCurveTo(-p.r * 0.3, -p.r * 0.2, -p.r * 0.4, -p.r * 1.2, 0, -p.r * 1.8);
+      ctx.fillStyle = 'rgba(255,255,255,0.28)';
+      ctx.fill();
+
+      ctx.restore();
+    });
+
+    frame++;
+    if (frame < TOTAL_FRAMES) {
+      requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  requestAnimationFrame(draw);
+}
+
+function closeAnniversary() {
+  document.getElementById('anniversaryOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+
+// ══════════════════════════════════════════
+//  BIRTHDAY CAKE
+// ══════════════════════════════════════════
+const CANDLE_PROMPTS = [
+  { icon: '🎂', title: 'A birthday wish for you' },
+  { icon: '💝', title: 'What I love most about you' },
+  { icon: '🌟', title: 'My birthday promise to you' }
+];
+
+let blownCandles = new Set();
+
+function openBirthday() {
+  const data = messagesData[8] || {};
+  const candles = data.candles || ['', '', ''];
+  blownCandles = new Set();
+
+  for (let i = 0; i < 3; i++) {
+    const card = document.getElementById('candleCard' + i);
+    const msgEl = document.getElementById('candleMsg' + i);
+    const candle = document.getElementById('bdayCandle' + i);
+    card.classList.add('locked');
+    card.classList.remove('open');
+    candle.classList.remove('blown');
+    if (candles[i] && candles[i].trim()) {
+      msgEl.textContent = candles[i];
+      msgEl.classList.remove('empty');
+    } else {
+      msgEl.textContent = "This candle hasn't been written yet.";
+      msgEl.classList.add('empty');
+    }
+    const header = document.getElementById('candleCardHeader' + i);
+    if (header) {
+      header.querySelector('.candle-title').textContent = CANDLE_PROMPTS[i].title;
+      header.querySelector('.candle-icon').textContent = CANDLE_PROMPTS[i].icon;
+    }
+  }
+
+  // Hide final card until all candles blown
+  const finalCard = document.getElementById('bdayFinalCard');
+  finalCard.style.display = 'none';
+  finalCard.classList.remove('visible');
+  document.getElementById('bdayFinalBody').style.display = 'none';
+  document.getElementById('bdayFinalChevron').style.transform = '';
+
+  // Populate final card
+  const finalMsg = document.getElementById('bdayFinalMsg');
+  const finalSig = document.getElementById('bdayFinalSig');
+  const finalPhoto = document.getElementById('bdayFinalPhoto');
+  const finalPhotoImg = document.getElementById('bdayFinalPhotoImg');
+
+  if (data.finalMessage && data.finalMessage.trim()) {
+    finalMsg.textContent = data.finalMessage;
+    finalMsg.classList.remove('empty');
+  } else {
+    finalMsg.textContent = "This note hasn't been written yet.";
+    finalMsg.classList.add('empty');
+  }
+  finalSig.textContent = data.finalSig || '— always yours ♥';
+  const bdayPhoto = photosData['bday-final'] || null;
+  if (bdayPhoto) {
+    finalPhotoImg.src = bdayPhoto;
+    finalPhoto.style.display = 'block';
+  } else {
+    finalPhoto.style.display = 'none';
+  }
+
+  document.getElementById('birthdayOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function checkShowBdayFinalCard() {
+  if (blownCandles.size === 3) {
+    const finalCard = document.getElementById('bdayFinalCard');
+    finalCard.style.display = 'block';
+    setTimeout(() => {
+      finalCard.classList.add('visible');
+      setTimeout(() => finalCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 200);
+    }, 600);
+  }
+}
+
+function toggleBdayFinal() {
+  const body = document.getElementById('bdayFinalBody');
+  const chevron = document.getElementById('bdayFinalChevron');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+  if (!isOpen) {
+    setTimeout(() => document.getElementById('bdayFinalCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  }
+}
+
+function toggleCandle(index) {
+  const card = document.getElementById('candleCard' + index);
+  const candle = document.getElementById('bdayCandle' + index);
+
+  if (!card.classList.contains('locked')) {
+    card.classList.toggle('open');
+    if (card.classList.contains('open')) {
+      setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    }
+    return;
+  }
+
+  // First tap — blow out candle
+  card.classList.remove('locked');
+  blownCandles.add(index);
+  candle.classList.add('blown');
+
+  // Spark burst from candle flame position
+  const flamePositions = [
+    { x: 0.33, y: 0.28 },
+    { x: 0.50, y: 0.22 },
+    { x: 0.67, y: 0.28 }
+  ];
+  birthdaySparkBurst(flamePositions[index]);
+
+  // Card flies in
+  setTimeout(() => {
+    card.classList.add('fly-in', 'open');
+    setTimeout(() => card.classList.remove('fly-in'), 500);
+    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+    checkShowBdayFinalCard();
+  }, 400);
+}
+
+function birthdaySparkBurst(pos) {
+  const canvas = document.getElementById('sparkleCanvas2');
+  const wrap = document.getElementById('cakeWrap');
+  canvas.width = wrap.offsetWidth;
+  canvas.height = wrap.offsetHeight + 180;
+  const ctx = canvas.getContext('2d');
+
+  const cx = canvas.width * pos.x;
+  const cy = canvas.height * pos.y;
+
+  const COLORS = ['#FF6B9D','#FFD700','#CE93D8','#FF8C00','#ffffff','#E91E8C','#FFB300'];
+  const particles = [];
+
+  for (let i = 0; i < 32; i++) {
+    const angle = (Math.random() * Math.PI * 2);
+    const speed = 1.5 + Math.random() * 4;
+    particles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 2,
+      r: 2 + Math.random() * 4,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      alpha: 1,
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.25,
+    });
+  }
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      if (p.alpha <= 0) return;
+      p.x += p.vx; p.y += p.vy;
+      p.vy += 0.12;
+      p.vx *= 0.97;
+      p.alpha -= 0.025;
+      p.rot += p.rotV;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.beginPath();
+      for (let s = 0; s < 4; s++) {
+        const a = (s / 4) * Math.PI * 2;
+        ctx.lineTo(Math.cos(a) * p.r, Math.sin(a) * p.r);
+        ctx.lineTo(Math.cos(a + Math.PI/4) * p.r * 0.4, Math.sin(a + Math.PI/4) * p.r * 0.4);
+      }
+      ctx.closePath();
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 70) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  requestAnimationFrame(draw);
+}
+
+function closeBirthday() {
+  document.getElementById('birthdayOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+let toastTimer;
+function showToast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ══════════════════════════════════════════
+//  PIN / EDIT ACCESS
+// ══════════════════════════════════════════
+function requestEditAccess() {
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('pinInput').focus(), 200);
+}
+function closePinModal() {
+  document.getElementById('pinOverlay').classList.remove('show');
+}
+function submitPin() {
+  const val = document.getElementById('pinInput').value;
+  if (val === EDIT_PIN) {
+    closePinModal();
+    enterEditor();
+  } else {
+    showToast('Incorrect PIN 🌿');
+  }
+}
+
+// ══════════════════════════════════════════
+//  EDITOR LIST
+// ══════════════════════════════════════════
+function enterEditor() {
+  document.getElementById('calendar').classList.remove('active');
+  document.getElementById('editor').classList.add('active');
+  buildEditorList();
+}
+function exitEditor() {
+  document.getElementById('editor').classList.remove('active');
+  document.getElementById('calendar').classList.add('active');
+  buildGrid();
+}
+
+function buildEditorList() {
+  const list = document.getElementById('editorDayList');
+  list.innerHTML = '';
+  for (let i = 0; i < TOTAL_DAYS; i++) {
+    const msg = messagesData[i];
+    const special = SPECIAL_DAYS[i];
+    const item = document.createElement('div');
+    item.className = 'editor-day-item';
+
+    if (i === 0) {
+      // Anniversary — show stem count
+      const stems = (msg && msg.stems) || [];
+      const filled = stems.filter(s => s && s.trim()).length;
+      item.innerHTML = `
+        <div class="ed-num">🌷</div>
+        <div class="ed-info">
+          <div class="ed-date">4th Anniversary · 25 June</div>
+          <div class="ed-preview ${filled === 0 ? 'empty' : ''}">${filled === 0 ? 'No stems written yet' : filled + ' of 4 petals written'}</div>
+        </div>
+        <div class="ed-status">${filled === 4 ? '✅' : ''}</div>
+      `;
+    } else if (i === 8) {
+      // Birthday — show candle count
+      const candles = (msg && msg.candles) || [];
+      const filled = candles.filter(c => c && c.trim()).length;
+      item.innerHTML = `
+        <div class="ed-num">🎂</div>
+        <div class="ed-info">
+          <div class="ed-date">36th Birthday · 3 July</div>
+          <div class="ed-preview ${filled === 0 ? 'empty' : ''}">${filled === 0 ? 'No candles written yet' : filled + ' of 3 candles written'}</div>
+        </div>
+        <div class="ed-status">${filled === 3 ? '✅' : ''}</div>
+      `;
+    } else {
+      const hasContent = msg && msg.message && msg.message.trim();
+      const icon = (msg && msg.icon) || (special ? special.icon : '✎');
+      const thumb = getPhoto(i);
+      item.innerHTML = `
+        ${thumb ? `<img class="ed-thumb" src="${thumb}">` : `<div class="ed-num">${icon}</div>`}
+        <div class="ed-info">
+          <div class="ed-date">${special ? special.label + ' · ' : ''}${formatDate(i)}</div>
+          <div class="ed-preview ${hasContent ? '' : 'empty'}">${hasContent ? msg.message : 'No message written yet'}</div>
+        </div>
+        <div class="ed-status">${hasContent ? '✅' : ''}</div>
+      `;
+    }
+    item.onclick = () => openDayEdit(i);
+    list.appendChild(item);
+  }
+}
+
+// ══════════════════════════════════════════
+//  DAY EDIT MODAL
+// ══════════════════════════════════════════
+let currentEditDay = null;
+let currentPhotoData = null;
+
+function openDayEdit(dayIndex) {
+  // Anniversary day — custom editor
+  if (dayIndex === 0) {
+    openAnniversaryEditor();
+    return;
+  }
+
+  // Birthday day — custom candle editor
+  if (dayIndex === 8) {
+    openBirthdayEditor();
+    return;
+  }
+
+  currentEditDay = dayIndex;
+  const msg = messagesData[dayIndex] || {};
+  const special = SPECIAL_DAYS[dayIndex];
+
+  document.getElementById('dayEditTitle').textContent =
+    special ? `Edit: ${special.label}` : `Edit: ${formatDate(dayIndex)}`;
+  document.getElementById('editType').value = msg.type || (special ? 'special' : 'note');
+  document.getElementById('editMessage').value = msg.message || '';
+  document.getElementById('editSig').value = msg.sig || '';
+  currentPhotoData = getPhoto(dayIndex);
+
+  buildIconRow(msg.icon || (special ? special.icon : '💌'));
+  renderPhotoArea();
+  document.getElementById('saveIndicator').textContent = '';
+
+  document.getElementById('dayEditOverlay').classList.add('show');
+}
+function closeDayEdit() {
+  document.getElementById('dayEditOverlay').classList.remove('show');
+  currentEditDay = null;
+  currentPhotoData = null;
+}
+
+// ── Anniversary editor (4 stems) ──
+function openAnniversaryEditor() {
+  const data = messagesData[0] || {};
+  const stems = data.stems || ['', '', '', ''];
+
+  const overlay = document.getElementById('dayEditOverlay');
+  const body = overlay.querySelector('.day-edit-body');
+
+  body.innerHTML = `
+    <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:18px;margin-bottom:18px;">🌷 Edit Anniversary — 4 Stems</h3>
+    ${STEM_PROMPTS.map((p, i) => `
+      <div class="anniv-edit-stem">
+        <label>${p.icon} ${p.title}</label>
+        <textarea id="annexStem${i}" placeholder="Write your response...">${stems[i] || ''}</textarea>
+      </div>
+    `).join('')}
+    <div style="height:1px;background:var(--parchment);margin:20px 0;"></div>
+    <div class="anniv-edit-stem">
+      <label>💌 Final note (appears after all 4 petals are opened)</label>
+      <textarea id="annexFinalMessageEdit" placeholder="A closing note to Bree..." style="min-height:120px;">${data.finalMessage || ''}</textarea>
+    </div>
+    <div class="anniv-edit-stem">
+      <label>Signature</label>
+      <textarea id="annexFinalSigEdit" placeholder="— always yours ♥" style="min-height:50px;">${data.finalSig || ''}</textarea>
+    </div>
+    <div class="anniv-edit-stem">
+      <label>📷 Photo for the final note (optional)</label>
+      <div id="annexFinalPhotoArea"></div>
+    </div>
+    <div class="day-edit-actions">
+      <button class="ed-cancel" onclick="closeDayEdit()">Cancel</button>
+      <button class="ed-save" onclick="saveAnniversaryStems()">Save</button>
+    </div>
+    <div class="save-indicator" id="saveIndicator"></div>
+  `;
+
+  // Render photo area for final note
+  currentPhotoData = getAnnivFinalPhoto();
+  renderAnnexFinalPhotoArea();
+
+  currentEditDay = 0;
+  overlay.classList.add('show');
+}
+
+function openBirthdayEditor() {
+  const data = messagesData[8] || {};
+  const candles = data.candles || ['', '', ''];
+
+  const overlay = document.getElementById('dayEditOverlay');
+  const body = overlay.querySelector('.day-edit-body');
+
+  body.innerHTML = `
+    <h3 style="font-family:'Playfair Display',serif;color:var(--brown);font-size:18px;margin-bottom:18px;">🎂 Edit Birthday — 3 Candles</h3>
+    ${CANDLE_PROMPTS.map((p, i) => `
+      <div class="bday-edit-candle">
+        <label>${p.icon} ${p.title}</label>
+        <textarea id="bdayCandleEdit${i}" placeholder="Write your message...">${candles[i] || ''}</textarea>
+      </div>
+    `).join('')}
+    <div style="height:1px;background:var(--parchment);margin:20px 0;"></div>
+    <div class="bday-edit-candle">
+      <label>💌 Final note (appears after all 3 candles are blown)</label>
+      <textarea id="bdayFinalMessageEdit" placeholder="A closing birthday note to Bree..." style="min-height:120px;">${data.finalMessage || ''}</textarea>
+    </div>
+    <div class="bday-edit-candle">
+      <label>Signature</label>
+      <textarea id="bdayFinalSigEdit" placeholder="— always yours ♥" style="min-height:50px;">${data.finalSig || ''}</textarea>
+    </div>
+    <div class="bday-edit-candle">
+      <label>📷 Photo for the final note (optional)</label>
+      <div id="bdayFinalPhotoArea"></div>
+    </div>
+    <div class="day-edit-actions">
+      <button class="ed-cancel" id="bdayEditCancel">Cancel</button>
+      <button class="ed-save" id="bdayEditSave">Save</button>
+    </div>
+    <div class="save-indicator" id="saveIndicator"></div>
+  `;
+
+  currentEditDay = 8;
+  currentPhotoData = photosData['bday-final'] || null;
+  renderBdayFinalPhotoArea();
+  overlay.classList.add('show');
+
+  document.getElementById('bdayEditCancel').addEventListener('click', closeDayEdit);
+  document.getElementById('bdayEditSave').addEventListener('click', saveBirthdayCandles);
+}
+
+function renderBdayFinalPhotoArea() {
+  const area = document.getElementById('bdayFinalPhotoArea');
+  if (!area) return;
+  if (currentPhotoData) {
+    area.innerHTML = `
+      <div class="photo-preview-wrap">
+        <img src="${currentPhotoData}">
+        <button class="photo-remove-btn" id="bdayPhotoRemoveBtn">Remove</button>
+      </div>`;
+    document.getElementById('bdayPhotoRemoveBtn').addEventListener('click', () => {
+      currentPhotoData = null;
+      renderBdayFinalPhotoArea();
+    });
+  } else {
+    area.innerHTML = `
+      <label class="upload-btn-label">
+        📷 Upload a photo
+        <input type="file" accept="image/*" id="bdayPhotoInput">
+      </label>`;
+    document.getElementById('bdayPhotoInput').addEventListener('change', (e) => {
+      handlePhotoUploadWithCallback(e, renderBdayFinalPhotoArea);
+    });
+  }
+}
+
+function saveBirthdayCandles() {
+  const indicator = document.getElementById('saveIndicator');
+  indicator.textContent = 'Saving...';
+
+  const candles = [0,1,2].map(i => {
+    const el = document.getElementById('bdayCandleEdit' + i);
+    return el ? el.value : '';
+  });
+
+  const finalMessageEl = document.getElementById('bdayFinalMessageEdit');
+  const finalSigEl = document.getElementById('bdayFinalSigEdit');
+
+  const previous = messagesData[8];
+  const previousPhoto = photosData['bday-final'];
+
+  messagesData[8] = {
+    ...(messagesData[8] || {}),
+    candles,
+    finalMessage: finalMessageEl ? finalMessageEl.value : '',
+    finalSig: finalSigEl ? finalSigEl.value : ''
+  };
+  if (currentPhotoData) photosData['bday-final'] = currentPhotoData;
+  else delete photosData['bday-final'];
+
+  const ok = saveMessages();
+  if (ok) {
+    indicator.textContent = 'Saved ✅';
+    setTimeout(() => { closeDayEdit(); buildEditorList(); }, 500);
+  } else {
+    messagesData[8] = previous;
+    if (previousPhoto) photosData['bday-final'] = previousPhoto;
+    else delete photosData['bday-final'];
+    indicator.textContent = 'Could not save — try again';
+  }
+}
+
+function handlePhotoUploadWithCallback(event, callback) {
+  const file = event.target ? event.target.files[0] : null;
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      currentPhotoData = compressImage(img, 600, 0.55);
+      if (currentPhotoData.length > 700000) currentPhotoData = compressImage(img, 450, 0.45);
+      if (currentPhotoData.length > 700000) currentPhotoData = compressImage(img, 320, 0.4);
+      if (currentPhotoData.length > 700000) currentPhotoData = compressImage(img, 240, 0.35);
+      callback();
+    };
+    img.onerror = () => showToast("Couldn't read that photo — try another");
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderAnnexFinalPhotoArea() {
+  const area = document.getElementById('annexFinalPhotoArea');
+  if (!area) return;
+  if (currentPhotoData) {
+    area.innerHTML = `
+      <div class="photo-preview-wrap">
+        <img src="${currentPhotoData}">
+        <button class="photo-remove-btn" id="annexPhotoRemoveBtn">Remove</button>
+      </div>`;
+    document.getElementById('annexPhotoRemoveBtn').addEventListener('click', () => {
+      currentPhotoData = null;
+      renderAnnexFinalPhotoArea();
+    });
+  } else {
+    area.innerHTML = `
+      <label class="upload-btn-label">
+        📷 Upload a photo
+        <input type="file" accept="image/*" id="annexPhotoInput">
+      </label>`;
+    document.getElementById('annexPhotoInput').addEventListener('change', handlePhotoUpload);
+  }
+}
+
+async function saveAnniversaryStems() {
+  const indicator = document.getElementById('saveIndicator');
+  indicator.textContent = 'Saving...';
+
+  const stems = [0,1,2,3].map(i => {
+    const el = document.getElementById('annexStem' + i);
+    return el ? el.value : '';
+  });
+
+  const finalMessageEl = document.getElementById('annexFinalMessageEdit');
+  const finalSigEl = document.getElementById('annexFinalSigEdit');
+
+  const previous = messagesData[0];
+  const previousPhoto = getAnnivFinalPhoto();
+  messagesData[0] = {
+    ...(messagesData[0] || {}),
+    stems,
+    finalMessage: finalMessageEl ? finalMessageEl.value : '',
+    finalSig: finalSigEl ? finalSigEl.value : ''
+    // finalPhoto stored separately
+  };
+  setAnnivFinalPhoto(currentPhotoData);
+
+  const ok = saveMessages();
+  if (ok) {
+    indicator.textContent = 'Saved ✅';
+    setTimeout(() => { closeDayEdit(); buildEditorList(); }, 500);
+  } else {
+    messagesData[0] = previous;
+    setAnnivFinalPhoto(previousPhoto);
+    indicator.textContent = 'Could not save — try again';
+  }
+}
+
+function buildIconRow(selected) {
+  const row = document.getElementById('iconRow');
+  row.innerHTML = '';
+  ICON_CHOICES.forEach(icon => {
+    const btn = document.createElement('button');
+    btn.className = 'icon-choice' + (icon === selected ? ' sel' : '');
+    btn.textContent = icon;
+    btn.type = 'button';
+    btn.onclick = () => {
+      document.querySelectorAll('.icon-choice').forEach(b => b.classList.remove('sel'));
+      btn.classList.add('sel');
+    };
+    row.appendChild(btn);
+  });
+}
+
+function renderPhotoArea() {
+  const area = document.getElementById('photoUploadArea');
+  if (!area) return;
+  if (currentPhotoData) {
+    area.innerHTML = `
+      <div class="photo-preview-wrap">
+        <img src="${currentPhotoData}">
+        <button class="photo-remove-btn" id="photoRemoveBtn">Remove</button>
+      </div>
+    `;
+    document.getElementById('photoRemoveBtn').addEventListener('click', () => {
+      currentPhotoData = null;
+      renderPhotoArea();
+    });
+  } else {
+    area.innerHTML = `
+      <label class="upload-btn-label">
+        📷 Upload a photo
+        <input type="file" accept="image/*" id="photoFileInput">
+      </label>
+    `;
+    document.getElementById('photoFileInput').addEventListener('change', handlePhotoUpload);
+  }
+}
+
+function removePhoto() {
+  currentPhotoData = null;
+  renderPhotoArea();
+}
+
+function handlePhotoUpload(event) {
+  const file = event.target ? event.target.files[0] : event.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      // Compress aggressively — storage has strict limits
+      currentPhotoData = compressImage(img, 600, 0.55);
+      if (currentPhotoData.length > 700000) currentPhotoData = compressImage(img, 450, 0.45);
+      if (currentPhotoData.length > 700000) currentPhotoData = compressImage(img, 320, 0.4);
+      if (currentPhotoData.length > 700000) currentPhotoData = compressImage(img, 240, 0.35);
+      // Refresh whichever photo area is currently visible
+      if (document.getElementById('annexFinalPhotoArea')) {
+        renderAnnexFinalPhotoArea();
+      } else if (document.getElementById('bdayFinalPhotoArea')) {
+        renderBdayFinalPhotoArea();
+      } else {
+        renderPhotoArea();
+      }
+    };
+    img.onerror = function() {
+      showToast("Couldn't read that photo — try another");
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(img, maxDim, quality) {
+  const canvas = document.createElement('canvas');
+  let { width, height } = img;
+  if (width > height && width > maxDim) {
+    height = Math.round(height * (maxDim / width));
+    width = maxDim;
+  } else if (height >= width && height > maxDim) {
+    width = Math.round(width * (maxDim / height));
+    height = maxDim;
+  }
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+function saveDayEdit() {
+  if (currentEditDay === null) return;
+  const indicator = document.getElementById('saveIndicator');
+  indicator.textContent = 'Saving...';
+
+  const selectedIcon = document.querySelector('.icon-choice.sel');
+  const entry = {
+    type: document.getElementById('editType').value,
+    icon: selectedIcon ? selectedIcon.textContent : '💌',
+    message: document.getElementById('editMessage').value,
+    sig: document.getElementById('editSig').value
+  };
+
+  const previousEntry = messagesData[currentEditDay];
+  const previousPhoto = getPhoto(currentEditDay);
+  messagesData[currentEditDay] = entry;
+  setPhoto(currentEditDay, currentPhotoData);
+
+  const ok = saveMessages();
+  if (ok) {
+    indicator.textContent = 'Saved ✅';
+    setTimeout(() => { closeDayEdit(); buildEditorList(); }, 500);
+  } else {
+    messagesData[currentEditDay] = previousEntry;
+    setPhoto(currentEditDay, previousPhoto);
+    indicator.textContent = 'Could not save — try again';
+  }
+}
+
+// Close overlays on backdrop tap
+document.getElementById('envelopeOverlay').addEventListener('click', function(e) { if (e.target === this) closeEnvelope(); });
+document.getElementById('anniversaryOverlay').addEventListener('click', function(e) { if (e.target === this) closeAnniversary(); });
+document.getElementById('birthdayOverlay').addEventListener('click', function(e) { if (e.target === this) closeBirthday(); });
+document.getElementById('pinOverlay').addEventListener('click', function(e) { if (e.target === this) closePinModal(); });
+document.getElementById('dayEditOverlay').addEventListener('click', function(e) { if (e.target === this) closeDayEdit(); });
+
+// Birthday candle taps + close
+for (let i = 0; i < 3; i++) {
+  (function(idx) {
+    document.getElementById('bdayCandle' + idx).addEventListener('click', () => toggleCandle(idx));
+    document.getElementById('candleCardHeader' + idx).addEventListener('click', () => toggleCandle(idx));
+  })(i);
+}
+document.getElementById('bdayCloseBtn').addEventListener('click', closeBirthday);
+document.getElementById('bdayFinalHeader').addEventListener('click', toggleBdayFinal);
+
+// Editor buttons
+document.getElementById('editorDoneBtn').addEventListener('click', exitEditor);
+document.getElementById('exportBtn').addEventListener('click', exportForBree);
+
+// Day edit modal buttons
+document.getElementById('dayEditCancelBtn').addEventListener('click', closeDayEdit);
+document.getElementById('dayEditSaveBtn').addEventListener('click', saveDayEdit);
+document.getElementById('photoFileInput').addEventListener('change', handlePhotoUpload);
+
+// PIN input enter key
+document.getElementById('pinInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitPin(); });
+
+// ══════════════════════════════════════════
+//  EXPORT — bakes all data into a new HTML file for Bree
+// ══════════════════════════════════════════
+function exportForBree() {
+  // Gather all current data
+  const textOnly = {};
+  Object.keys(messagesData).forEach(k => {
+    const d = { ...messagesData[k] };
+    delete d.photo; delete d.finalPhoto;
+    textOnly[k] = d;
+  });
+
+  const exportedData = {
+    messages: textOnly,
+    photos: photosData,
+    exportedAt: new Date().toISOString()
+  };
+
+  // Get the current HTML source
+  const html = document.documentElement.outerHTML;
+
+  // Replace PREVIEW_MODE to false so it opens on real dates for Bree
+  const noPreview = html.replace(
+    /const PREVIEW_MODE = (true|false);/,
+    'const PREVIEW_MODE = false;'
+  );
+
+  // Inject baked-in data script right before </body>
+  const dataScript = `
+<script id="baked-data">
+(function() {
+  try {
+    var d = ${JSON.stringify(exportedData)};
+    Object.keys(d.messages || {}).forEach(function(k) {
+      localStorage.setItem('bree-messages', JSON.stringify(d.messages));
+    });
+    localStorage.setItem('bree-messages', JSON.stringify(d.messages || {}));
+    Object.keys(d.photos || {}).forEach(function(k) {
+      try { localStorage.setItem('bree-photo-' + k, d.photos[k]); } catch(e) {}
+    });
+  } catch(e) {}
+})();
+<\/script>`;
+
+  const finalHtml = noPreview.replace('</body>', dataScript + '\n</body>');
+
+  // Trigger download
+  const blob = new Blob([finalHtml], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'for-bree.html';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast('Exported! Send for-bree.html to Bree 🌷');
+}
+</script>
+</body>
+</html>
